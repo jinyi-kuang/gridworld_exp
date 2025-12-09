@@ -481,7 +481,7 @@ function setupGame() {
  --------------------------------------------------------- */
   trials = [];
   trials.push(preload);
-  /*trials.push(introductionIntroduction);
+  trials.push(introductionIntroduction);
   trials.push(introductionConsent);
   trials.push(enterFullscreen);
   trials.push(taskInstructions);
@@ -491,7 +491,7 @@ function setupGame() {
   trials.push(comprehensionConclusion);
   trials.push(trialProcedure);
   trials.push(purchaseIntro);
-  trials.push(purchaseDecision);*/
+  trials.push(purchaseDecision);
   trials.push(preSurveyMessage);
   trials.push(exitSurvey);
   trials.push(saveData);
