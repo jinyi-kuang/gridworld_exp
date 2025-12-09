@@ -446,8 +446,17 @@ function setupGame() {
         sessionID: gs.prolific_info.prolificSessionID,
         condition: gs.session_info.condition
       };
-      const allData = jsPsych.data.get().addToAll({ sessionMeta }).csv();
-      return allData;
+      // Get jsPsych data as array of plain objects
+      const allData = jsPsych.data.get().values().map(trialData => ({
+        trial_index: trialData.trial_index,
+        trial_type: trialData.trial_type,
+        response: trialData.response,
+        ...sessionMeta
+      }));
+
+      // Convert to CSV safely
+      const csv = Papa.unparse(allData); // or use your own CSV function
+      return csv;
     }
   };
 

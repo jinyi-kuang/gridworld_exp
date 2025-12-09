@@ -116,9 +116,16 @@ var jsPsychNormAgentObserve = (function(jspsych) {
 `;
 
       display_element.innerHTML = html;
-        const previous_berries_info = typeof trial.previous_berries_info === 'function'
-    ? trial.previous_berries_info()
-    : trial.previous_berries_info;
+      const previous_berries_info = typeof trial.previous_berries_info === 'function'
+        ? trial.previous_berries_info()
+        : trial.previous_berries_info;
+
+      const submitBtn = document.getElementById('submitBtn');
+      
+      // disable button initially 
+      submitBtn.disabled = true; 
+      submitBtn.style.opacity = 0.5; 
+      submitBtn.style.cursor = 'not-allowed';
 
       // Initialize the Gridworld with the trial data
       const gridworld = new Gridworld(trial.trial_config, false, null, trial.agent_index, true, trial.previous_path, trial.previous_end_position, previous_berries_info);
@@ -153,11 +160,41 @@ var jsPsychNormAgentObserve = (function(jspsych) {
         console.error("Error starting observation:", error);
       }
 
-      // Submit button logic
-      const submitBtn = document.getElementById('submitBtn');
-      submitBtn.addEventListener('click', () => {
-        const trial_end = Date.now();
 
+      // enable submit button after animation duration
+      // replace 500 with the actual duration of your animation in ms
+      setTimeout(() => {
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = 1;
+        submitBtn.style.cursor = 'pointer';
+      }, 3000);
+
+      // create a warning element shown when participant tries to submit without predicting
+      const sidebarEl = document.getElementById('sidebar');
+      const warnEl = document.createElement('div');
+      warnEl.id = 'predictWarning';
+      warnEl.innerText = 'Please finish observation before submitting.';
+      warnEl.style.color = '#b00000';
+      warnEl.style.fontWeight = '600';
+      warnEl.style.marginTop = '10px';
+      warnEl.style.display = 'none';
+      // Insert the warning *right after* the button
+      submitBtn.insertAdjacentElement('afterend', warnEl);
+
+      // click listener
+      submitBtn.addEventListener('click', () => {
+        const hasObservation =
+          (gridworld.agent0Basket ? gridworld.agent0Basket.getBerryInfo().count > 0 : false) ||
+          (gridworld.agent1Basket ? gridworld.agent1Basket.getBerryInfo().count > 0 : false);
+        if (!hasObservation) {
+          // show warning briefly and block submission
+          warnEl.style.display = 'block';
+          setTimeout(() => { warnEl.style.display = 'none'; }, 2000);
+          return;
+        }
+
+        const trial_end = Date.now();
+  
         // Collect data from the Gridworld
         const trial_data = {
           ..._.omit(trial, 'on_finish', 'type', 'data'),
