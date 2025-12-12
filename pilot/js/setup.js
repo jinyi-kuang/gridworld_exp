@@ -337,99 +337,109 @@ function setupGame() {
 
   // define survey trial
   var exitSurvey = _.extend({},
-    gs.study_metadata,
-    _.omit(gs.session_info, 'on_finish'),
-    gs.prolific_info, {
-    type: jsPsychSurvey,
-    pages: [[
-      {
-        type: 'html',
-        prompt: 'Please answer the following questions:',
-      },
-      {
-        type: 'multi-choice',
-        name: 'participantGender',
-        prompt: "What is your gender?",
-        options: ['Male', 'Female', 'Non-binary', 'Other'],
-        columns: 0,
-        required: true
-      },
-      {
-        type: 'text',
-        name: 'participantYears',
-        prompt: 'How many years old are you?',
-        placeholder: '18',
-        textbox_columns: 5,
-        required: true
-      },
-      {
-        type: 'multi-choice',
-        name: 'participantRace',
-        prompt: 'What is your race?',
-        options: ['White', 'Black/African American', 'American Indian/Alaska Native', 'Asian', 'Native Hawaiian/Pacific Islander', 'Multiracial/Mixed', 'Other'],
-        columns: 0,
-        required: true
-      },
-      {
-        type: 'multi-choice',
-        name: 'participantEthnicity',
-        prompt: 'What is your ethnicity?',
-        options: ['Hispanic', 'Non-Hispanic'],
-        columns: 0,
-        required: true
-      },
-      {
-        type: 'multi-choice',
-        name: 'inputDevice',
-        prompt: 'Which of the following devices did you use to complete this study?',
-        options: ['Mouse', 'Trackpad', 'Touch Screen', 'Stylus', 'Other'],
-        columns: 0,
-        required: true
-      },
-      {
-        type: 'likert',
-        name: 'judgedDifficulty',
-        prompt: 'How difficult did you find this study?',
-        likert_scale_min_label: 'Very Easy',
-        likert_scale_max_label: 'Very Hard',
-        likert_scale_values: [{ value: 1 }, { value: 2 }, { value: 3 }, { value: 4 }, { value: 5 }],
-        required: true,
-      },
-      {
-        type: 'likert',
-        name: 'participantEffort',
-        prompt: 'How much effort did you put into the game? Your response will not effect your final compensation.',
-        likert_scale_min_label: 'Low Effort',
-        likert_scale_max_label: 'High Effort',
-        likert_scale_values: [{ value: 1 }, { value: 2 }, { value: 3 }, { value: 4 }, { value: 5 }],
-        required: true,
-      },
-      {
-        type: 'text',
-        name: 'participantComments',
-        prompt: "What factors influenced how you decided to respond? Do you have any other comments or feedback to share with us about your experience?",
-        placeholder: "I had a lot of fun!",
-        textbox_rows: 4,
-        required: false
-      },
-      {
-        type: 'text',
-        name: "TechnicalDifficultiesFreeResp",
-        prompt: "If you encountered any technical difficulties, please briefly describe the issue.",
-        placeholder: "I did not encounter any technical difficulities.",
-        textbox_rows: 4,
-        required: false
-      }
-    ]],
+  gs.study_metadata,
+  _.omit(gs.session_info, 'on_finish'),
+  gs.prolific_info, {
+    type: jsPsychSurveyHtmlForm,
+    html: `
+      <h3 style="text-align:left;">Please answer the following questions:</h3>
+
+      <!-- Gender -->
+      <p style="text-align:left;"><strong>What is your gender?</strong></p>
+      <label style="display:block; text-align:left;"><input type="radio" name="participantGender" value="Male" required> Male</label>
+      <label style="display:block; text-align:left;"><input type="radio" name="participantGender" value="Female"> Female</label>
+      <label style="display:block; text-align:left;"><input type="radio" name="participantGender" value="Non-binary"> Non-binary</label>
+      <label style="display:block; text-align:left;"><input type="radio" name="participantGender" value="Other"> Other</label><br>
+
+      <!-- Age -->
+      <p style="text-align:left;">How many years old are you?</p>
+      <div style="text-align:left; margin-bottom:15px;">
+        <input type="number" name="participantYears" placeholder="18" style="width:60px; display:block;" required>
+      </div>
+
+
+      <!-- Race -->
+      <p style="text-align:left;"><strong>What is your race?</strong></p>
+      <label style="display:block; text-align:left;"><input type="radio" name="participantRace" value="White" required> White</label>
+      <label style="display:block; text-align:left;"><input type="radio" name="participantRace" value="Black/African American"> Black/African American</label>
+      <label style="display:block; text-align:left;"><input type="radio" name="participantRace" value="American Indian/Alaska Native"> American Indian/Alaska Native</label>
+      <label style="display:block; text-align:left;"><input type="radio" name="participantRace" value="Asian"> Asian</label>
+      <label style="display:block; text-align:left;"><input type="radio" name="participantRace" value="Native Hawaiian/Pacific Islander"> Native Hawaiian/Pacific Islander</label>
+      <label style="display:block; text-align:left;"><input type="radio" name="participantRace" value="Multiracial/Mixed"> Multiracial/Mixed</label>
+      <label style="display:block; text-align:left;"><input type="radio" name="participantRace" value="Other"> Other</label><br>
+
+      <!-- Ethnicity -->
+      <p style="text-align:left;"><strong>What is your ethnicity?</strong></p>
+      <label style="display:block; text-align:left;"><input type="radio" name="participantEthnicity" value="Hispanic" required> Hispanic</label>
+      <label style="display:block; text-align:left;"><input type="radio" name="participantEthnicity" value="Non-Hispanic"> Non-Hispanic</label><br>
+
+      <!-- Device -->
+      <p style="text-align:left;"><strong>Which of the following devices did you use to complete this study?</strong></p>
+      <label style="display:block; text-align:left;"><input type="radio" name="inputDevice" value="Mouse" required> Mouse</label>
+      <label style="display:block; text-align:left;"><input type="radio" name="inputDevice" value="Trackpad"> Trackpad</label>
+      <label style="display:block; text-align:left;"><input type="radio" name="inputDevice" value="Touch Screen"> Touch Screen</label>
+      <label style="display:block; text-align:left;"><input type="radio" name="inputDevice" value="Stylus"> Stylus</label>
+      <label style="display:block; text-align:left;"><input type="radio" name="inputDevice" value="Other"> Other</label><br>
+
+      <!-- Difficulty -->
+      <p style="text-align:left;"><strong>How difficult did you find this study?</strong></p>
+      <div style="text-align:left; margin-bottom:15px;">
+        <label style="display:inline-block; margin-right:15px;">
+          <input type="radio" name="judgedDifficulty" value="1" required> 1 (Very Easy)
+        </label>
+        <label style="display:inline-block; margin-right:15px;">
+          <input type="radio" name="judgedDifficulty" value="2"> 2
+        </label>
+        <label style="display:inline-block; margin-right:15px;">
+          <input type="radio" name="judgedDifficulty" value="3"> 3
+        </label>
+        <label style="display:inline-block; margin-right:15px;">
+          <input type="radio" name="judgedDifficulty" value="4"> 4
+        </label>
+        <label style="display:inline-block; margin-right:15px;">
+          <input type="radio" name="judgedDifficulty" value="5"> 5 (Very Hard)
+        </label>
+      </div>
+
+      <!-- Effort -->
+      <p style="text-align:left;"><strong>How much effort did you put into the game? Your response will not affect your final compensation.</strong></p>
+      <div style="text-align:left; margin-bottom:15px;">
+        <label style="display:inline-block; margin-right:15px;">
+          <input type="radio" name="participantEffort" value="1" required> 1 (Low Effort)
+        </label>
+        <label style="display:inline-block; margin-right:15px;">
+          <input type="radio" name="participantEffort" value="2"> 2
+        </label>
+        <label style="display:inline-block; margin-right:15px;">
+          <input type="radio" name="participantEffort" value="3"> 3
+        </label>
+        <label style="display:inline-block; margin-right:15px;">
+          <input type="radio" name="participantEffort" value="4"> 4
+        </label>
+        <label style="display:inline-block; margin-right:15px;">
+          <input type="radio" name="participantEffort" value="5"> 5 (High Effort)
+        </label>
+      </div>
+
+      <!-- Comments -->
+      <p style="text-align:left;"><strong>What factors influenced how you decided to respond? Any other comments?</strong></p>
+      <textarea name="participantComments" rows="4" style="width:100%; text-align:left;" placeholder="I had a lot of fun!"></textarea><br><br>
+
+      <!-- Technical difficulties -->
+      <p style="text-align:left;">If you encountered any technical difficulties, please briefly describe the issue.</p>
+      <textarea name="TechnicalDifficultiesFreeResp" rows="4" style="width:100%; text-align:left;" placeholder="I did not encounter any technical difficulties."></textarea>
+    `,
+    button_label: "Submit",
     on_start: function () {
       gs.session_data.endExperimentTS = Date.now(); // collect end experiment time
     },
     on_finish: function (data) {
-      var updatedData = _.extend({}, gs.session_data, _.omit(data, 'on_start')); // because gs.session_data is updated throught the experiment
+      var updatedData = _.extend({}, gs.session_data, _.omit(data, 'on_start'));
       console.log('emitting trial data', updatedData)
       jsPsych.setProgressBar(1);
     }
   });
+
   /* ---------------------------------------------------------
      SAVE DATA  
  --------------------------------------------------------- */
@@ -450,13 +460,13 @@ function setupGame() {
       const allData = jsPsych.data.get().values().map(trialData => ({
         trial_index: trialData.trial_index,
         trial_type: trialData.trial_type,
-        response: trialData.response,
-        ...sessionMeta
+        response: trialData.response,    
+        ...sessionMeta 
       }));
 
-      // Convert to CSV safely
-      const csv = Papa.unparse(allData); // or use your own CSV function
-      return csv;
+      // Convert to JSON string
+    return JSON.stringify(allData);
+
     }
   };
 
@@ -479,7 +489,7 @@ function setupGame() {
       window.onbeforeunload = null;
 
       //change this to prolific url
-      var completion_url = "https://github.com/jinyi-kuang/gridworld_exp" 
+      var completion_url = "https://github.com/jinyi-kuang/gridworld_exp"
 
       window.open(completion_url, "_self")
     }
