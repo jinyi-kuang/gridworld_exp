@@ -15,9 +15,9 @@ function setupGame() {
   const jsPsych = initJsPsych({
     show_progress_bar: true,
     auto_update_progress_bar: false
-  }); 
- 
-  
+  });
+
+
  /* ---------------------------------------------------------
     GET EXP INFO FROM URL
  --------------------------------------------------------- */
@@ -69,60 +69,75 @@ function setupGame() {
   /* ---------------------------------------------------------
     INSTRUCTIONS
  --------------------------------------------------------- */
-  var introductionIntroduction = {
-    type: jsPsychInstructions,
-    pages: [
-      `<p>Hello! Thank you for participating in this research.</p>
-    <i><p>We recommend using Chrome for this study, as it can be buggy in other browsers.</p>
-     <p>Please keep your browser maximized for the duration of this study.</p></i>`
-    ],
-    show_clickable_nav: true,
-    //allow_keys: gs.study_metadata.dev_mode,
-    allow_keys: false,
-    allow_backward: true
+
+  var landingPage = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <div>
+        <p><u>Welcome!</u></p>
+      </div>
+      <div>
+        <p>In this experiment, your task is to watch two farmers as they harvest berries from a farm.</p>
+        <p>We expect the experiment to take approximately 10 minutes to complete, including the time it takes to read these instructions.</p>
+        <p>Click <b>Get Started</b> to begin.</p>
+      </div>`,
+    choices: ['Get Started'],
+    margin_vertical: "20px"
   };
 
-  var introductionConsent = {
-    type: jsPsychInstructions,
-    pages: [
-      `<p>By completing this study, you are participating in research
-        being performed by cognitive scientists in the Stanford University
-        Department of Psychology. The purpose of this research is to find out
-        how people learn about each other using language and conversation.</p>
-
-     <p>You must be at least 18 years old to participate. There are neither
-        specific benefits nor anticipated risks associated with participation
-        in this study. Your participation is completely voluntary and you can
-        withdraw at any time by simply exiting the study. You may decline to
-        answer any or all of the following questions. Choosing not to participate
-        or withdrawing will result in no penalty.</p>
-
-     <p>Your anonymity is assured: the researchers will not receive any personal
-        information about you, and any information you provide will not be shared
-        in association with any personally identifying information.</p>
-
-     <p>We expect the study to last about ${time} minutes, including the time
-        it takes to read these instructions.</p>
-
-     <p>If you have questions about this research, please contact the researchers
-        by sending an email to <b><a href="mailto:jkuang@sas.upenn.edu">jkuang@sas.upenn.edu</a></b>.
-        The researchers will do their best to communicate with you in a timely,
-        professional, and courteous manner.</p>
-
-     <p>If you have questions regarding your rights as a research subject, or if
-        problems arise which you do not feel you can discuss with the researchers,
-        please contact the Stanford University Institutional Review Board.</p>
-
-     <p><b>Click 'Next' to continue participating in this study.</b></p>`
-    ],
-    show_clickable_nav: true,
-    //allow_keys: gs.study_metadata.dev_mode,
-    allow_keys: false,
-    allow_backward: true
+  var consentPage = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <p><u> Consent Form </u></p>
+      <div style="text-align: left; background-color: lightblue; overflow: auto; height: 500px; padding: 20px; max-width: 900px;">
+        <p>
+          By completing this study, you are participating in research
+          being performed by cognitive scientists in the Stanford University
+          Department of Psychology. The purpose of this research is to find out
+          how people learn about each other using language and conversation.
+        </p>
+        <p>
+          You must be at least 18 years old to participate. There are neither
+          specific benefits nor anticipated risks associated with participation
+          in this study. Your participation is completely voluntary and you can
+          withdraw at any time by simply exiting the study. You may decline to
+          answer any or all of the following questions. Choosing not to participate
+          or withdrawing will result in no penalty.
+        </p>
+        <p>Your anonymity is assured: the researchers will not receive any personal
+          information about you, and any information you provide will not be shared
+          in association with any personally identifying information.</p>
+        <p>
+          We expect the study to last about ${time} minutes, including the time
+          it takes to read these instructions.
+        </p>
+        <p>
+          If you have questions about this research, please contact the researchers
+          by sending an email to <b><a href="mailto:jkuang@sas.upenn.edu">jkuang@sas.upenn.edu</a></b>.
+          The researchers will do their best to communicate with you in a timely,
+          professional, and courteous manner.
+        </p>
+        <p>
+          If you have questions regarding your rights as a research subject, or if
+          problems arise which you do not feel you can discuss with the researchers,
+          please contact the Stanford University Institutional Review Board.
+        </p>
+        <p>
+          <b>Click <b>I Agree</b> to continue participating in this study.</b>
+        </p>
+      </div>
+    `,
+    choices: ['I Agree'],
+    margin_vertical: "20px"
   };
+
 
   var enterFullscreen = {
     type: jsPsychFullscreen,
+    message: `
+      <p>The experiment will switch to fullscreen when you press the button below.</p>
+      <p>Please keep your browser maximized for the duration of this study.</p>
+    `,
     fullscreen_mode: true
   };
 
@@ -148,17 +163,17 @@ function setupGame() {
     <p>You will click on one tree to make your prediction for ${yellow_text} first just like this: .</p>
     <img height="550" src="assets/image/predict_yellow.gif">`,
 
-    `Next, you will click on one tree to make your prediction for ${purple_text} just like this: .</p> 
+    `Next, you will click on one tree to make your prediction for ${purple_text} just like this: .</p>
     <img height="550" src="assets/image/predict_purple.gif">`,
 
     `<p>Next, you will observe the farmers as they harvest the berries from the trees. </p>
-    <img height="550" src="assets/image/observe.png"> </p>  
+    <img height="550" src="assets/image/observe.png"> </p>
     <p>This process will repeat for several rounds. </p>`,
 
     `<p>After observing both farmers, you will decide how many berries to purchase from each farmer, just like this: </p>
      <img height="550" src="assets/image/purchase.png">
    <p>Each berry you purchase will bring the farmers $0.1 profit, no matter what type of berries. Any berries you did not purchase will go perished. </p>`,
-    
+
    '<p>Let\'s get started!</p> \
       <p>We\'re going to ask you three questions to check your understanding.</p>'
   ];
@@ -167,8 +182,7 @@ function setupGame() {
     type: jsPsychInstructions,
     pages: taskInstructionsHTML,
     show_clickable_nav: true,
-    //allow_keys: gs.study_metadata.dev_mode,
-     allow_keys: false,
+    allow_keys: false,
     allow_backward: true,
     on_start: function () {
       gs.session_data.startInstructionTS = Date.now();
@@ -176,40 +190,41 @@ function setupGame() {
   }
 
   /* ---------------------------------------------------------
-   COMPREHENSION CHECK 
+   COMPREHENSION CHECK
 --------------------------------------------------------- */
+
   function makeCompQuestion(promptText, options, correctAnswer) {
-  return {
-    timeline: [
-      {
-        type: jsPsychHtmlButtonResponse,
-        stimulus: function() {
-          // check last attempt
-          const lastTrial = jsPsych.data.get().last(1).values()[0];
-          const showError = lastTrial && lastTrial.comp_correct === false;
-          return `
-            ${showError ? '<p style="color:red; font-weight:bold;">Incorrect, please try again.</p>' : ''}
-            <p>${promptText}</p>
-          `;
-        },
-        choices: function() {
-          // Shuffle options every time this trial is shown
-          return jsPsych.randomization.shuffle(options.slice());
-        },
-        on_finish: function(data) {
-          // Save the shuffled options for this trial
-          const shuffledOptions = this.choices;
-          // Mark correctness based on the shuffled options
-          data.comp_correct = shuffledOptions[data.response] === correctAnswer;
+    return {
+      timeline: [
+        {
+          type: jsPsychHtmlButtonResponse,
+          stimulus: function() {
+            // check last attempt
+            const lastTrial = jsPsych.data.get().last(1).values()[0];
+            const showError = lastTrial && lastTrial.comp_correct === false;
+            return `
+              ${showError ? '<p style="color:red; font-weight:bold;">Incorrect, please try again.</p>' : ''}
+              <p>${promptText}</p>
+            `;
+          },
+          choices: function() {
+            // Shuffle options every time this trial is shown
+            return jsPsych.randomization.shuffle(options.slice());
+          },
+          on_finish: function(data) {
+            // Save the shuffled options for this trial
+            const shuffledOptions = this.choices;
+            // Mark correctness based on the shuffled options
+            data.comp_correct = shuffledOptions[data.response] === correctAnswer;
+          }
         }
+      ],
+      loop_function: function() {
+        const lastTrial = jsPsych.data.get().last(1).values()[0];
+        return lastTrial.comp_correct === false; // repeat until correct
       }
-    ],
-    loop_function: function() {
-      const lastTrial = jsPsych.data.get().last(1).values()[0];
-      return lastTrial.comp_correct === false; // repeat until correct
-    }
-  };
-}
+    };
+  }
 
   // Example questions
   var compQ1 = makeCompQuestion(
@@ -303,11 +318,11 @@ function setupGame() {
   };
 
   /* ---------------------------------------------------------
-     PURCHASE DECISION 
+     PURCHASE DECISION
  --------------------------------------------------------- */
   var purchaseIntro = {
     type: jsPsychHtmlButtonResponse,
-    stimulus: '<p>Nice work, now it is time to purchase berries.</p>',
+    stimulus: '<p>Nice work! Now it is time to purchase berries.</p>',
     choices: ['Continue'],
     margin_vertical: "20px"
   };
@@ -324,13 +339,15 @@ function setupGame() {
   };
 
   /* ---------------------------------------------------------
-    SURVEY 
+    SURVEY
 --------------------------------------------------------- */
   var preSurveyMessage = {
     type: jsPsychHtmlButtonResponse,
-    stimulus: '<p>You\'ve completed the experiment!\
-                </br>On the next page, you\'ll be shown a brief set of questions about how the experiment went.\
-                </br>Once you submit your answers, you\'ll be redirected back to Prolific and credited for participation.</p>',
+    stimulus: `
+      <p>You have completed the experiment!</p>
+      <p>On the next page, you\'ll be shown a brief set of questions about how the experiment went.</p>
+      <p>Once you submit your answers, you will be redirected back to Prolific and credited for participation.</p>
+    `,
     choices: ['Continue'],
     margin_vertical: "20px"
   }
@@ -441,7 +458,7 @@ function setupGame() {
   });
 
   /* ---------------------------------------------------------
-     SAVE DATA  
+     SAVE DATA
  --------------------------------------------------------- */
   const saveData = {
     type: jsPsychPipe,
@@ -460,8 +477,8 @@ function setupGame() {
       const allData = jsPsych.data.get().values().map(trialData => ({
         trial_index: trialData.trial_index,
         trial_type: trialData.trial_type,
-        response: trialData.response,    
-        ...sessionMeta 
+        response: trialData.response,
+        ...sessionMeta
       }));
 
       // Convert to JSON string
@@ -498,23 +515,24 @@ function setupGame() {
   /* ---------------------------------------------------------
      RUN THE EXPERIMENT
  --------------------------------------------------------- */
-  trials = [];
-  trials.push(preload);
-  trials.push(introductionIntroduction);
-  trials.push(introductionConsent);
-  trials.push(enterFullscreen);
-  trials.push(taskInstructions);
-  trials.push(compQ1);
-  trials.push(compQ2);
-  trials.push(compQ3);
-  trials.push(comprehensionConclusion);
-  trials.push(trialProcedure);
-  trials.push(purchaseIntro);
-  trials.push(purchaseDecision);
-  trials.push(preSurveyMessage);
-  trials.push(exitSurvey);
-  trials.push(saveData);
-  trials.push(goodbye);
+  trials = [
+    preload,
+    landingPage,
+    consentPage,
+    enterFullscreen,
+    taskInstructions,
+    compQ1,
+    compQ2,
+    compQ3,
+    comprehensionConclusion,
+    trialProcedure,
+    purchaseIntro,
+    purchaseDecision,
+    preSurveyMessage,
+    exitSurvey,
+    saveData,
+    goodbye
+  ];
 
   jsPsych.run(trials);
 }
