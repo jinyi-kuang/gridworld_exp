@@ -211,6 +211,8 @@ function setupGame() {
             // Shuffle options every time this trial is shown
             return jsPsych.randomization.shuffle(options.slice());
           },
+          margin_horizontal: "800px", // TODO consider updating CSS directly to stack the buttons vertically? (or keep horizontal)
+          margin_vertical: "20px",
           on_finish: function(data) {
             // Save the shuffled options for this trial
             const shuffledOptions = this.choices;
@@ -247,13 +249,15 @@ function setupGame() {
 
   var comprehensionConclusion = {
     type: jsPsychHtmlButtonResponse,
-    stimulus: '<p>Great job! \
-                </br>You\'ve learned everything you need to know about how ' + yellow_text + ' and ' + purple_text + ' harvest their farm.</p>\
-                <p>Now, your job is to <em>evaluate</em> them as they harvest a <em>new</em> set of plots.\
-                </br>In the next part, you\'ll see both farmers harvest new plots.</p>',
+    stimulus: `
+      <p>Great job! You have learned everything you need to know about how ${yellow_text} and ${purple_text} harvest their farm.</p>
+      <p>In the next part, you will be shown a <em>new</em> set of plots that they are planning to harvest.</p>
+      <p>Your job is to predict which tree each farmer will harvest in the plot.</p>
+      <p>Pay attention to which trees they end up harvesting.</p>
+    `,
     choices: ['Continue'],
-    margin_vertical: "20px"
-  }
+    margin_vertical: "20px",
+  };
 
   /* ---------------------------------------------------------
   TRIAL

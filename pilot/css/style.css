@@ -30,7 +30,7 @@ body, html {
   font-size: 26px; /* Reduced font size */
   line-height: 1.2;
   text-align: center;
-  margin-top: 20px;
+  /* margin-top: 20px; */
   margin-bottom: 10px;
 }
 
@@ -40,12 +40,6 @@ body, html {
   margin-top: 60px;
 }
 
-#instructionSubtext {
-  font-size: 22px;
-  text-align: center;
-  margin-top: 10px;
-  margin-bottom: 20px;
-}
 
 #agentReminder {
   margin-top: 40px;
@@ -58,7 +52,8 @@ body, html {
  /* flex-direction: columm;*/
   justify-content: space-around;
   width: 100%;
-  margin-bottom: 20px;
+  /* margin-bottom: 20px; */
+  margin-top: 180px;
 }
 
 .basketContainer {
@@ -68,7 +63,7 @@ body, html {
   margin-bottom: 20px;
   display: inline-block;
   vertical-align: top;
-  padding-bottom: 20px;    
+  padding-bottom: 20px;
 }
 
 /* Style for basket labels */
@@ -99,13 +94,13 @@ body, html {
   color: white;
   border: none;
   padding: 10px 20px;
-  font-size: 20px; 
+  font-size: 20px;
   cursor: pointer;
   align-self: center;
   margin-bottom: 10px;
   margin-top: 10px;
   border-radius: 5px;
-  margin-top: auto;
+  /* margin-top: auto; */
   box-shadow: 0 2px 5px rgba(0,0,0,0.2);  /* Added shadow */
 }
 

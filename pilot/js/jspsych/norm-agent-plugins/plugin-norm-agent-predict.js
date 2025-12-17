@@ -59,7 +59,7 @@ var jsPsychNormAgentPredict = (function (jspsych) {
     <div id="sidebar">
 
       <div id="instructionText">
-        Click the tree you think 
+        Click the tree you think
         <span style="color: ${agent_hsl}; text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;">
           ${agent_name}
         </span> will harvest.
@@ -121,11 +121,8 @@ var jsPsychNormAgentPredict = (function (jspsych) {
 
       // create submit button
       const submitBtn = document.getElementById('submitBtn');
-      if (agent_name === 'PURPLE') {
-        submitBtn.innerText = "Click to observe harvest";
-      } else {
-        submitBtn.innerText = "Click to predict purple's harvest";
-      }
+      submitBtn.innerText = "Submit";
+
 
       // disable button when no prediction is made
       submitBtn.disabled = true;
@@ -185,7 +182,7 @@ var jsPsychNormAgentPredict = (function (jspsych) {
 
       // show warning when submit button is clicked without a prediction
       submitBtn.addEventListener('click', () => {
-        // check whether a prediction was made 
+        // check whether a prediction was made
         const hasPrediction =
           (gridworld.coordinateTrajectory && gridworld.coordinateTrajectory.length > 0) ||
           (gridworld.treeTrajectory && gridworld.treeTrajectory.length > 0);

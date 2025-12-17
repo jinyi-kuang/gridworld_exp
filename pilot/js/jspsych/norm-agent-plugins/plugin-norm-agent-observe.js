@@ -121,10 +121,10 @@ var jsPsychNormAgentObserve = (function(jspsych) {
         : trial.previous_berries_info;
 
       const submitBtn = document.getElementById('submitBtn');
-      
-      // disable button initially 
-      submitBtn.disabled = true; 
-      submitBtn.style.opacity = 0.5; 
+
+      // disable button initially
+      submitBtn.disabled = true;
+      submitBtn.style.opacity = 0.5;
       submitBtn.style.cursor = 'not-allowed';
 
       // Initialize the Gridworld with the trial data
@@ -154,8 +154,12 @@ var jsPsychNormAgentObserve = (function(jspsych) {
         let sameEndPosition = trial.trial_config.target_tree_positions[0][0] - 1 == trial.trial_config.target_tree_positions[1][0] - 1 &&
           trial.trial_config.target_tree_positions[0][1] - 1 == trial.trial_config.target_tree_positions[1][1] - 1;
 
-        startObservation(gridworld, 0, trial.trial_config.agent_types[0], optimistStartPosition, optimistEndPosition, sameEndPosition);
-        startObservation(gridworld, 1, trial.trial_config.agent_types[1], pessimistStartPosition, pessimistEndPosition, sameEndPosition);
+        // startObservation(gridworld, 0, trial.trial_config.agent_types[0], optimistStartPosition, optimistEndPosition, sameEndPosition);
+        // startObservation(gridworld, 1, trial.trial_config.agent_types[1], pessimistStartPosition, pessimistEndPosition, sameEndPosition);
+        setTimeout(() => {
+          startObservation(gridworld, 0, trial.trial_config.agent_types[0], optimistStartPosition, optimistEndPosition, sameEndPosition);
+          startObservation(gridworld, 1, trial.trial_config.agent_types[1], pessimistStartPosition, pessimistEndPosition, sameEndPosition);
+        }, 2000); // TODO: make this a global
       } catch (error) {
         console.error("Error starting observation:", error);
       }
@@ -167,7 +171,7 @@ var jsPsychNormAgentObserve = (function(jspsych) {
         submitBtn.disabled = false;
         submitBtn.style.opacity = 1;
         submitBtn.style.cursor = 'pointer';
-      }, 3000);
+      }, 5000); // TODO: make this a global
 
       // create a warning element shown when participant tries to submit without predicting
       const sidebarEl = document.getElementById('sidebar');
@@ -194,7 +198,7 @@ var jsPsychNormAgentObserve = (function(jspsych) {
         }
 
         const trial_end = Date.now();
-  
+
         // Collect data from the Gridworld
         const trial_data = {
           ..._.omit(trial, 'on_finish', 'type', 'data'),
