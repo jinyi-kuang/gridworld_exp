@@ -170,8 +170,7 @@ function setupGame() {
     <img height="550" src="assets/image/observe.png"> </p>
     <p>This process will repeat for several rounds. </p>`,
 
-    `<p>After observing both farmers, you will decide how many berries to purchase from each farmer, just like this: </p>
-     <img height="550" src="assets/image/purchase.png">
+    `<p>After observing both farmers, you will decide how many berries to purchase from each farmer </p>
    <p>Each berry you purchase will bring the farmers $0.1 profit, no matter what type of berries. Any berries you did not purchase will go perished. </p>`,
 
    '<p>Let\'s get started!</p> \
@@ -216,6 +215,7 @@ function setupGame() {
             const shuffledOptions = this.choices;
             // Mark correctness based on the shuffled options
             data.comp_correct = shuffledOptions[data.response] === correctAnswer;
+            button_html: '<button class="jspsych-btn" style="display:block; width:100%; margin: 5px 0;">%choice%</button>'
           }
         }
       ],
@@ -260,6 +260,24 @@ function setupGame() {
 --------------------------------------------------------- */
   var trialProcedure = {
     timeline: [
+      {
+        type: jsPsychHtmlButtonResponse,
+        stimulus: function () {
+          const idx = jsPsych.timelineVariable('index') + 1;
+          return (
+            '<p>Nice job! Now ' +
+            yellow_text +
+            ' and ' +
+            purple_text +
+            ' will harvest plot ' +
+            '<span style="font-size: 36px; font-weight: bold;">' +
+            idx +
+            '</span>.</p>'
+          );
+        },
+        choices: ['Continue'],
+        margin_vertical: "20px"
+      },
       _.extend({}, gs.study_metadata, gs.session_info, {
         type: jsPsychNormAgentPredict,
         trial_config: jsPsych.timelineVariable('data'),
@@ -359,6 +377,9 @@ function setupGame() {
   gs.prolific_info, {
     type: jsPsychSurveyHtmlForm,
     html: `
+    <div style="
+        font-size: 26px;        /* base font for all text */
+      ">
       <h3 style="text-align:left;">Please answer the following questions:</h3>
 
       <!-- Gender -->
@@ -371,7 +392,7 @@ function setupGame() {
       <!-- Age -->
       <p style="text-align:left;">How many years old are you?</p>
       <div style="text-align:left; margin-bottom:15px;">
-        <input type="number" name="participantYears" placeholder="18" style="width:60px; display:block;" required>
+        <input type="number" name="participantYears" placeholder="18" style="width:60px; display:block; font-size: 26px;" required>
       </div>
 
 
