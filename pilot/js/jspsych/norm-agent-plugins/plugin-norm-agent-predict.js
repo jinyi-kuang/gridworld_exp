@@ -49,8 +49,18 @@ var jsPsychNormAgentPredict = (function (jspsych) {
       const agent0_hsl = convertToHSL(gs.agent.colors[trial.trial_config.agent_types[0]]);
       const agent1_name = gs.agent.names[trial.trial_config.agent_types[1]];
       const agent1_hsl = convertToHSL(gs.agent.colors[trial.trial_config.agent_types[1]]);
+       const trialNum = trial.trial_config.trial_number;
 
       let html = `
+      <div id="trialNumber" style="
+    text-align: center;
+    font-size: 30px;
+    font-weight: bold;
+    margin-bottom: 12px;
+  ">
+    Plot ${trialNum}
+  </div>
+
   <div id="gridworldContainer">
     <div id="gridworldAndSteps">
       <canvas id="gridworldCanvas" width="800" height="800"></canvas>
@@ -121,8 +131,11 @@ var jsPsychNormAgentPredict = (function (jspsych) {
 
       // create submit button
       const submitBtn = document.getElementById('submitBtn');
-      submitBtn.innerText = "Submit";
-
+      if (agent_name === 'PURPLE') {
+        submitBtn.innerText = "Click to observe harvest";
+      } else {
+        submitBtn.innerText = "Continue";
+      }
 
       // disable button when no prediction is made
       submitBtn.disabled = true;

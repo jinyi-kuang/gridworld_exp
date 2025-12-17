@@ -27,7 +27,7 @@ body, html {
 }
 
 #instructionText, #remainingSteps {
-  font-size: 26px; /* Reduced font size */
+  font-size: 30px; /* Reduced font size */
   line-height: 1.2;
   text-align: center;
   /* margin-top: 20px; */
@@ -35,11 +35,17 @@ body, html {
 }
 
 #reminderHeader {
-  font-size: 26px;
+  font-size: 30px;
   text-align: center;
   margin-top: 60px;
 }
 
+#instructionSubtext {
+  font-size: 26px;
+  text-align: center;
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
 
 #agentReminder {
   margin-top: 40px;
@@ -69,7 +75,7 @@ body, html {
 /* Style for basket labels */
 .basketLabel {
   text-align: center;
-  font-size: 20px;
+  font-size: 30px;
   margin-bottom: -50px;
 }
 
@@ -85,7 +91,7 @@ body, html {
   bottom: -10px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 24px;
+  font-size: 30px;
   color: #333;
 }
 
@@ -94,13 +100,12 @@ body, html {
   color: white;
   border: none;
   padding: 10px 20px;
-  font-size: 20px;
+  font-size: 24px;
   cursor: pointer;
   align-self: center;
-  margin-bottom: 10px;
-  margin-top: 10px;
+  margin-top: 20px;
+  margin-bottom: 20px;
   border-radius: 5px;
-  /* margin-top: auto; */
   box-shadow: 0 2px 5px rgba(0,0,0,0.2);  /* Added shadow */
 }
 
@@ -124,7 +129,7 @@ body, html {
   bottom: auto;
   left: 0;
   right: 0;
-  font-size: 24px; /* Font size for the counter */
+  font-size: 26px; /* Font size for the counter */
   background: #FAEFD1;
   position: absolute;
   z-index: 12;
@@ -140,7 +145,7 @@ body, html {
 }
 
 #harvestOutcome {
-  font-size: 26px;
+  font-size: 30px;
   /* padding-top: 30px; */
   /* margin-bottom: 30px; */
   text-align: center;
@@ -148,7 +153,7 @@ body, html {
 }
 
 #promptid {
-  font-size: 24px;
+  font-size: 30px;
 }
 
 #fullScreenPrompt {
@@ -199,3 +204,12 @@ body, html {
 #fullScreenButton:hover {
   box-shadow: 0 0.5vh 1vh 0 rgba(0,0,0,0.24), 0 0.7vh 1.5vh 0 rgba(0,0,0,0.19);
 }
+
+.jspsych-display-element {
+  font-size: 24px;
+}
+
+.jspsych-btn {
+  font-size: 24px;
+}
+

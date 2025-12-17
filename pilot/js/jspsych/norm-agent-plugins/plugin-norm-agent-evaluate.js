@@ -75,24 +75,30 @@ var jsPsychNormAgentEvaluate = (function (jspsych) {
         .berry-purchase-container {
           max-width: 1000px;
           margin: 0 auto;
+          font-size: 24px; 
         }
         .basketContainer {
           position: relative;
+          font-size: 24px; 
         }
 
         .purchase-form {
           margin-top: 20px;
+          font-size: 24px; 
         }
         .purchase-input {
           margin: 10px 0;
+          font-size: 24px; 
         }
         .purchase-input label {
           display: block;
-          margin-bottom: 5px;
+          margin-bottom: 10px;
+          font-size: 24px; 
         }
         .purchase-input input {
           width: 100px;
-          padding: 5px;
+          padding: 10px;
+          font-size: 24px; 
         }
         
       `;

@@ -63,8 +63,19 @@ var jsPsychNormAgentObserve = (function(jspsych) {
       const agent0_hsl = convertToHSL(gs.agent.colors[trial.trial_config.agent_types[0]]);
       const agent1_name = gs.agent.names[trial.trial_config.agent_types[1]];
       const agent1_hsl = convertToHSL(gs.agent.colors[trial.trial_config.agent_types[1]]);
+      const trialNum = trial.trial_config.trial_number;
+
 
       let html = `
+      <div id="trialNumber" style="
+    text-align: center;
+    font-size: 30px;
+    font-weight: bold;
+    margin-bottom: 12px;
+  ">
+    Plot ${trialNum}
+  </div>
+
   <div id="gridworldContainer">
     <div id="gridworldAndSteps">
       <canvas id="gridworldCanvas" width="800" height="800"></canvas>
@@ -131,7 +142,7 @@ var jsPsychNormAgentObserve = (function(jspsych) {
       const gridworld = new Gridworld(trial.trial_config, false, null, trial.agent_index, true, trial.previous_path, trial.previous_end_position, previous_berries_info);
       gridworld.agent0Basket.updateCounter();
       gridworld.agent1Basket.updateCounter();
-      try {
+
         // Render each agent's path
         // TODO consider a variable to keep track of which agent is being observed
         // rather than hardcoding the 0 and 1 below
@@ -154,24 +165,26 @@ var jsPsychNormAgentObserve = (function(jspsych) {
         let sameEndPosition = trial.trial_config.target_tree_positions[0][0] - 1 == trial.trial_config.target_tree_positions[1][0] - 1 &&
           trial.trial_config.target_tree_positions[0][1] - 1 == trial.trial_config.target_tree_positions[1][1] - 1;
 
-        // startObservation(gridworld, 0, trial.trial_config.agent_types[0], optimistStartPosition, optimistEndPosition, sameEndPosition);
-        // startObservation(gridworld, 1, trial.trial_config.agent_types[1], pessimistStartPosition, pessimistEndPosition, sameEndPosition);
-        setTimeout(() => {
-          startObservation(gridworld, 0, trial.trial_config.agent_types[0], optimistStartPosition, optimistEndPosition, sameEndPosition);
-          startObservation(gridworld, 1, trial.trial_config.agent_types[1], pessimistStartPosition, pessimistEndPosition, sameEndPosition);
-        }, 2000); // TODO: make this a global
-      } catch (error) {
-        console.error("Error starting observation:", error);
-      }
+        try {
+          const delayMs = 1000; // delay in milliseconds (e.g., 1000ms = 1s)
+
+          setTimeout(() => {
+            startObservation(gridworld, 0, trial.trial_config.agent_types[0], optimistStartPosition, optimistEndPosition, sameEndPosition);
+            startObservation(gridworld, 1, trial.trial_config.agent_types[1], pessimistStartPosition, pessimistEndPosition, sameEndPosition);
+          }, delayMs);
+
+        } catch (error) {
+          console.error("Error starting observation:", error);
+        }
 
 
-      // enable submit button after animation duration
+        // enable submit button after animation duration
       // replace 500 with the actual duration of your animation in ms
       setTimeout(() => {
         submitBtn.disabled = false;
         submitBtn.style.opacity = 1;
         submitBtn.style.cursor = 'pointer';
-      }, 5000); // TODO: make this a global
+      }, 5000);
 
       // create a warning element shown when participant tries to submit without predicting
       const sidebarEl = document.getElementById('sidebar');
