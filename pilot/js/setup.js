@@ -340,7 +340,9 @@ function setupGame() {
  --------------------------------------------------------- */
   var purchaseIntro = {
     type: jsPsychHtmlButtonResponse,
-    stimulus: '<p>Nice work! Now it is time to purchase berries.</p>',
+    stimulus: '<p>Nice work! Now it is time to purchase berries.</p>  You will need to decide how many berries to purchase from each farmer from their most recent harvest.</p>' +
+      '<p>Each berry you purchase will bring the farmers $0.1 profit, no matter what type of berries.</p>' + 
+      '<p>Any berries you did not purchase will go perished. </p>',
     choices: ['Continue'],
     margin_vertical: "20px"
   };
@@ -390,7 +392,7 @@ function setupGame() {
       <label style="display:block; text-align:left;"><input type="radio" name="participantGender" value="Other"> Other</label><br>
 
       <!-- Age -->
-      <p style="text-align:left;">How many years old are you?</p>
+      <p style="text-align:left;"><strong>How many years old are you?</strong></p>
       <div style="text-align:left; margin-bottom:15px;">
         <input type="number" name="participantYears" placeholder="18" style="width:60px; display:block; font-size: 26px;" required>
       </div>
