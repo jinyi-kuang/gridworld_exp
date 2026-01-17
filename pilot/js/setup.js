@@ -77,8 +77,8 @@ function setupGame() {
         <p><u>Welcome!</u></p>
       </div>
       <div>
-        <p>In this experiment, your task is to watch two farmers as they harvest berries from a farm.</p>
-        <p>We expect the experiment to take approximately 10 minutes to complete, including the time it takes to read these instructions.</p>
+        <p>In this experiment, your task is to evaluate two farmers as they harvest berries from a farm.</p>
+        <p>We expect the experiment to take approximately <b>ten minutes</b> to complete, including the time it takes to read these instructions.</p>
         <p>Click <b>Get Started</b> to begin.</p>
       </div>`,
     choices: ['Get Started'],
@@ -135,7 +135,7 @@ function setupGame() {
   var enterFullscreen = {
     type: jsPsychFullscreen,
     message: `
-      <p>The experiment will switch to fullscreen when you press the button below.</p>
+      <p>The experiment will switch to fullscreen when you press <b>Continue</b> below.</p>
       <p>Please keep your browser maximized for the duration of this study.</p>
     `,
     fullscreen_mode: true

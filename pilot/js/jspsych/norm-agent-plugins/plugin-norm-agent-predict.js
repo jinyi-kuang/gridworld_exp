@@ -76,7 +76,7 @@ var jsPsychNormAgentPredict = (function (jspsych) {
       </div>
 
       <!-- MOVE BUTTON HERE -->
-      <button id="submitBtn">Continue</button>
+      <button id="submitBtn" style="margin-top: -10px;">Continue</button>
 
       <!-- BASKETS BELOW -->
       <div class="baskets-container" style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
