@@ -143,38 +143,40 @@ function setupGame() {
 
   // Define task instructions language
   var taskInstructionsHTML = [
-    `<p>Imagine you are a berry retailer. Your task is to observe two different farmers,
-     ${yellow_text} and ${purple_text}, as they harvest berries from trees on a shared farm,
-     and then you will decide how many berries to purchase from them.</p>`,
+    ` <p>Overview</p>
+    <p>Imagine you are a <b>berry retailer</b>. </p>
+     <p>Your job is buy berries from local farmers and then sell them at a market in town.</p>
+     <p>Today, you will be observing two different farmers, ${yellow_text} Farmer and ${purple_text} Farmer.</p>
+     <p>${yellow_text} Farmer and ${purple_text} Farmer work on the same land.</p>
+     <img height="550" src="assets/image/agent_intro.png">`,
 
-    `<p>The farm has a number of different <em>plots</em> that need harvesting.</p>
-   <p>Each plot is <em>10</em> squares wide and <em>10</em> squares tall, just like this:</p>
-   <img height="550" src="assets/image/gridworld.png">
-   <p>There are <em>berry trees</em> spread throughout the plot.</p>`,
+    `<p>The Farm</p>
+    <p>The farm has a number of different <em>plots</em> that must be harvested.</p>
+     <p>Each plot is <em>10</em> squares wide and <em>10</em> squares tall</p>
+     <p>There are <em>berry trees</em> distributed throughout the plot, just like this.</p>
+     <img height="550" src="assets/image/gridworld.png">`,
 
-    `<p>Each tree produces two different type of berry, yellow berries and purple berries.</p>
-   <p>${yellow_text} only harvest yellow berries, while ${purple_text} only harvest purple berries. </p>
-   <img height="550" src="assets/image/harvest.png">`,
+    `<p>Tree Berries</p>
+    <p>On every tree, there are <em>two different type of berry</em>, yellow berries and purple berries.</p>
+    <p>There are different numbers of berries growing on each tree.</p>
+    <p>Some trees have more yellow berries than purple berries.</p>
+    <p>Other trees have more purple berries than yellow ones, and some have equal numbers of both. </p>`,
 
-  // `<p>The farmers can harvest berries together or separately. If they come to harvest together, they will harvest all the berries from the same square.
-  // <p>If they come to separate squares, they will only be able to harvest a portion of the berries from that square.</p>`,
+    `<p>Farmer Roles</p>
+    <p>When the farmers harvest a tree, ${yellow_text} gathers the yellow berries and ${purple_text} gathers the purple berries. </p>
+     <img height="550" src="assets/image/harvest.png">`,
 
-    `<p>On each plot, you will first make prediction about which tree the two farmers will harvest one by one. </p>
-    <p>You will click on one tree to make your prediction for ${yellow_text} first just like this: .</p>
-    <img height="550" src="assets/image/predict_yellow.gif">`,
+  `<p>Harvesting Process</p>
+  <p>It takes time to harvest, so when the farmers harvest a plot, each of them chooses just one tree to harvest.</p>
+  <p>They can go anywhere in the plot, but they only have time to harvest a single tree. </p>
+  <p><em>If they both harvest the same tree, they can help each other out and gather more berries.</em></p>
+  <p><em>If they choose to harvest different trees, they can\’t gather as many berries as they do together.</em></p>
+  <p>After they harvest, they put the berries they collected into their own baskets. </p>`,
 
-    `Next, you will click on one tree to make your prediction for ${purple_text} just like this: .</p>
-    <img height="550" src="assets/image/predict_purple.gif">`,
-
-    `<p>Next, you will observe the farmers as they harvest the berries from the trees. </p>
-    <img height="550" src="assets/image/observe.png"> </p>
-    <p>This process will repeat for several rounds. </p>`,
-
-    `<p>After observing both farmers, you will decide how many berries to purchase from each farmer </p>
-   <p>Each berry you purchase will bring the farmers $0.1 profit, no matter what type of berries. Any berries you did not purchase will go perished. </p>`,
-
-   '<p>Let\'s get started!</p> \
-      <p>We\'re going to ask you three questions to check your understanding.</p>'
+   `<p>Before we get started, let\'s take a moment to make sure everything is <em>crystal clear</em>. </p> 
+   <p>On the next screen, you will be presented with several questions about these instructions.</p>
+   <p>Please answer them as best you can.</p>
+   <p>You will not be able to proceed to the task until you have answered all of them correctly.</p>`,
   ];
 
   var taskInstructions = {
@@ -230,35 +232,57 @@ function setupGame() {
 
   // Example questions
   var compQ1 = makeCompQuestion(
-    "1. What are you asked to do?",
-    ["Harvest berries", "Purchase berries", "Play the agent role"],
-    "Purchase berries"
+    "1. Which of the following best describes the ${yellow_text} Farmer and ${purple_text} Farmer's harvesting?",
+    ["Both farmers harvest both types of berries, as long as they are at the same tree", 
+    "${yellow_text} Farmer harvests yellow berries and ${purple_text} Farmer harvests purple berries, but only when they are at the same tree (at different trees, they harvest both berries)",
+    "${yellow_text} Farmer harvests yellow berries and ${purple_text} Farmer harvests purple berries, no matter whether they are at the same tree or different trees."],
+    "${yellow_text} Farmer harvests yellow berries and ${purple_text} Farmer harvests purple berries, no matter whether they are at the same tree or different trees."
   );
 
   var compQ2 = makeCompQuestion(
-    "2. Which of the following is a type of berry the purple agent can harvest?",
-    ["Blue berry", "Yellow berry", "Purple berry"],
-    "Purple berry"
+    "2. Which of the following best describes the ${yellow_text} Farmer and ${purple_text} Farmer\’s harvesting?",
+    ["Each farmer can only harvest one tree in a given plot, but they can choose any one.",
+    "Each farmer can only harvest one tree in a given plot, and they must choose the same tree to harvest it.", 
+    "Each farmer can harvest more than one tree in a given plot, as long as they choose the same ones."],
+    "Each farmer can only harvest one tree in a given plot, but they can choose any one."
   );
 
   var compQ3 = makeCompQuestion(
-    "3. Assume you only purchased half of the berries harvested by the yellow agent. What happens to the other half?",
-    ["Yellow agent keeps them", "They perish", "They are given to the purple agent"],
-    "They perish"
+    "3. Which of the following best describes the ${yellow_text} Farmer and ${purple_text} Farmer\’s harvesting?",
+    ["All trees have the same number of yellow and purple berries; the farmers can each harvest more when they harvest the same tree.",
+    "Different trees have different numbers of yellow and purple berries; the farmers can each harvest more when they harvest the same tree.", 
+    "Different trees have different numbers of yellow and purple berries; the farmers harvest the same amount regardless of whether they choose the same tree."],
+    "Different trees have different numbers of yellow and purple berries; the farmers can each harvest more when they harvest the same tree."
   );
+  }
+
+  var comprehensionConclusionHTML = [
+      `<p>Great job! Now it\’s time to get started with the task. <\p>
+      <p>You are going to see a series of plots that ${yellow_text} Farmer and ${purple_text} Farmer are harvesting one at a time.</p>
+      <p>Your job is to take a look at the plot and predict which tree each farmer will harvest.</p>`,
+
+      `<p>In each trial, you\’ll start with ${yellow_text} Farmer. </p>
+      <p>Click any tree to see the path they would take to harvest.</p>
+      <p>You can change your choice by clicking a different tree, or click the farmer to restart.</p>
+      <p>When you\’re ready, click <b>Next</b> to submit your prediction. </p>`,
+
+      `<p>After you make your prediction for ${yellow_text} Farmer, your job is to make a similar prediction for ${purple_text} Farmer.</p>`,
+
+      `<p>Once you\’ve made your prediction for both farmers, you\’ll be able to see where they actually harvest in that plot, and how many berries they each gathered.</p>
+      <p><em>Pay attention to which trees they harvest to learn how these farmers harvest their farm!</em></p>`,
+
+      `<p>Let’s get started! </p>
+      <p>Click <b>Next</b> to watch the farmers harvest their first plot of the day. </p>`,
+  ];
 
   var comprehensionConclusion = {
-    type: jsPsychHtmlButtonResponse,
-    stimulus: `
-      <p>Great job! You have learned everything you need to know about how ${yellow_text} and ${purple_text} harvest their farm.</p>
-      <p>In the next part, you will be shown a <em>new</em> set of plots that they are planning to harvest.</p>
-      <p>Your job is to predict which tree each farmer will harvest in the plot.</p>
-      <p>Pay attention to which trees they end up harvesting.</p>
-    `,
-    choices: ['Continue'],
-    margin_vertical: "20px",
+    type: jsPsychInstructions,
+    pages: comprehensionConclusionHTML,
+    show_clickable_nav: true,
+    allow_keys: false,
+    allow_backward: true,
   };
-
+  
   /* ---------------------------------------------------------
   TRIAL
 --------------------------------------------------------- */
@@ -344,9 +368,13 @@ function setupGame() {
  --------------------------------------------------------- */
   var purchaseIntro = {
     type: jsPsychHtmlButtonResponse,
-    stimulus: '<p>Nice work! Now it is time to purchase berries.</p>  You will need to decide how many berries to purchase from each farmer from their most recent harvest.</p>' +
-      '<p>Each berry you purchase will bring the farmers $0.1 profit, no matter what type of berries.</p>' + 
-      '<p>Any berries you did not purchase will go perished. </p>',
+    stimulus: '<p>Nice work! Now, it’s time to fulfill your role as a berry retailer. </p>' +
+      '<p>On the next screen, you will be shown the number of berries each farmer gathered in their most recent harvest.</p>' +
+      '<p>You will be asked how many berries you want to purchase from each farmer.</p>' +
+      '<p>You will make a profit on all the berries you purchase, no matter how many. </p>' +
+      '<p>The more you purchase from each farmer, the more money that farmer makes.</p>' +
+      '<p><em>Any berries you do not purchase will go to waste and the farmer who picked them will lose money on those berries. </em></p>' +
+      '<p>Click <b>Continue</b> to make your purchase decision.</p>',
     choices: ['Continue'],
     margin_vertical: "20px"
   };
