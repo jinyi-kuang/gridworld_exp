@@ -82,7 +82,8 @@ function generateCriticalTrial(trialNumber) {
       }))
     ],
     tree_rewards: [
-      [gs.experiment.center_tree.solo_reward, gs.experiment.center_tree.joint_reward],
+      // Show joint reward for both initially - actual payout determined after movement
+      [gs.experiment.center_tree.joint_reward, gs.experiment.center_tree.joint_reward],
       ...gs.experiment.corner_trees.map(t => [t.reward, t.reward])
     ],
     tree_visibility: [1, 1, 1],
