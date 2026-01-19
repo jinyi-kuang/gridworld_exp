@@ -551,27 +551,34 @@ function setupGame() {
     experiment_id: "y12O7vwqUMve",
     filename: filename,
     data_string: () => {
-      const sessionMeta = {
-        gameID: gs.session_info.gameID,
-        prolificID: gs.prolific_info.prolificID,
-        studyID: gs.prolific_info.prolificStudyID,
-        sessionID: gs.prolific_info.prolificSessionID,
-        condition: gs.session_info.condition,
-        repetition_condition: gs.session_info.repetition_condition,
-        payoff_condition: gs.session_info.payoff_condition
-      };
-      // Get jsPsych data as array of plain objects
-      const allData = jsPsych.data.get().values().map(trialData => ({
-        trial_index: trialData.trial_index,
-        trial_type: trialData.trial_type,
-        response: trialData.response,
-        rt: trialData.rt || null,
-        ...trialData, 
-        ...sessionMeta
-      }));
 
-      // Convert to JSON string
-    return JSON.stringify(allData);
+      // Session metadata (saved only once)
+    const sessionMeta = {
+      gameID: gs.session_info.gameID,
+      prolificID: gs.prolific_info.prolificID,
+      studyID: gs.prolific_info.prolificStudyID,
+      sessionID: gs.prolific_info.prolificSessionID,
+      condition: gs.session_info.condition,
+      repetition_condition: gs.session_info.repetition_condition,
+      payoff_condition: gs.session_info.payoff_condition
+    };
+
+    // Trial-level data only
+    const trialData = jsPsych.data.get().values().map(trialData => ({
+      trial_index: trialData.trial_index,
+      trial_type: trialData.trial_type,
+      response: trialData.response ?? null,
+      rt: trialData.rt ?? null,
+      dv_name: trialData.data.dv_name ?? null
+    }));
+
+    // Combine session meta and trial data
+    const dataToSave = {
+      sessionMeta,
+      trials: trialData
+    };
+
+    return JSON.stringify(dataToSave);  
 
     }
   };
