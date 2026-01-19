@@ -16,6 +16,7 @@ gs = {
     gameID: undefined,
     condition: 'trait_causal', // legacy - kept for compatibility
     repetition_condition: undefined, // 'low' (2 rounds) or 'high' (6 rounds)
+    payoff_condition: undefined, // 'interdependent' or 'independent'
     on_finish: undefined,
   },
   prolific_info: {
@@ -28,19 +29,29 @@ gs = {
       low: 2,
       high: 6
     },
+    payoff_conditions: {
+      interdependent: {
+        center_solo: 1,
+        center_joint: 8,
+        corner: 5
+      },
+      independent: {
+        center_solo: 5,
+        center_joint: 5,
+        corner: 5
+      }
+    },
     center_tree: {
       position: [5, 5],
-      solo_reward: 1,
-      joint_reward: 8,
       size_multiplier: 1.4
     },
     corner_trees: [
-      { position: [2, 2], reward: 5 },
-      { position: [9, 9], reward: 5 }
+      { position: [2, 2] },
+      { position: [9, 9] }
     ],
     critical_trial: {
-      yellow_target: [5, 5],  // center (gets solo_reward = 1)
-      purple_target: [9, 9]   // corner (gets 5)
+      yellow_target: [5, 5],  // center
+      purple_target: [9, 9]   // corner
     }
   },
   dv_questions: {

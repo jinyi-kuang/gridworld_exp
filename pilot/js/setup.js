@@ -31,11 +31,19 @@ function setupGame() {
   const conditionParam = urlParams.get('CONDITION');
   gs.session_info.repetition_condition = conditionParam || (Math.random() < 0.5 ? 'low' : 'high');
 
-  // Generate trials based on condition
-  const experimentTrials = generateAllTrials(gs.session_info.repetition_condition);
+  // Assign payoff condition (between-subjects: 'interdependent' or 'independent')
+  const payoffParam = urlParams.get('PAYOFF_CONDITION');
+  gs.session_info.payoff_condition = payoffParam || (Math.random() < 0.5 ? 'interdependent' : 'independent');
+
+  // Generate trials based on conditions
+  const experimentTrials = generateAllTrials(gs.session_info.repetition_condition, gs.session_info.payoff_condition);
   const numCoordinationRounds = gs.experiment.repetition_conditions[gs.session_info.repetition_condition];
 
-  console.log("Experiment condition:", gs.session_info.repetition_condition, "Trials:", experimentTrials.length);
+  console.log("Experiment conditions:", {
+    repetition: gs.session_info.repetition_condition,
+    payoff: gs.session_info.payoff_condition,
+    trials: experimentTrials.length
+  });
 
   // jsdatapipe data filename
   // Random 10-character ID
@@ -149,7 +157,27 @@ function setupGame() {
     fullscreen_mode: true
   };
 
-  // Define task instructions language
+  // Define task instructions language based on payoff condition
+  const isInterdependent = gs.session_info.payoff_condition === 'interdependent';
+  const payoffs = gs.experiment.payoff_conditions[gs.session_info.payoff_condition];
+
+  // Center tree instruction varies by payoff condition
+  const centerTreeInstruction = isInterdependent
+    ? `<p><strong>Important:</strong> The <em>large tree in the center</em> has the most berries,
+       but it requires <strong>both farmers working together</strong> to harvest fully. The branches
+       are too high for one farmer to reach alone.</p>
+       <p>When both farmers go to the center tree together, they each get <strong>${payoffs.center_joint} berries</strong>.</p>
+       <p>If only one farmer goes to the center tree alone, they can only reach <strong>${payoffs.center_solo} berry</strong>.</p>`
+    : `<p>All trees yield the same number of berries.</p>
+       <p>The <em>center tree</em> and the <em>corner trees</em> each give <strong>${payoffs.center_solo} berries</strong> per farmer,
+       whether they harvest together or alone.</p>`;
+
+  // Corner tree instruction varies by payoff condition
+  const cornerTreeInstruction = isInterdependent
+    ? `<p>The <em>smaller trees in the corners</em> can be harvested by one farmer alone.</p>
+       <p>A farmer who goes to a corner tree will get <strong>${payoffs.corner} berries</strong>.</p>`
+    : `<p>The <em>smaller trees in the corners</em> also give <strong>${payoffs.corner} berries</strong> per farmer.</p>`;
+
   var taskInstructionsHTML = [
     `<p>Imagine you are observing two farmers, ${yellow_text} and ${purple_text},
      as they harvest berries from trees on a shared farm.</p>
@@ -164,14 +192,9 @@ function setupGame() {
    <p>${yellow_text} only harvests yellow berries, while ${purple_text} only harvests purple berries.</p>
    <img height="500" src="assets/image/harvest.png">`,
 
-    `<p><strong>Important:</strong> The <em>large tree in the center</em> has the most berries,
-    but it requires <strong>both farmers working together</strong> to harvest fully. The branches
-    are too high for one farmer to reach alone.</p>
-    <p>When both farmers go to the center tree together, they each get <strong>8 berries</strong>.</p>
-    <p>If only one farmer goes to the center tree alone, they can only reach <strong>1 berry</strong>.</p>`,
+    centerTreeInstruction,
 
-    `<p>The <em>smaller trees in the corners</em> can be harvested by one farmer alone.</p>
-    <p>A farmer who goes to a corner tree will get <strong>5 berries</strong>.</p>`,
+    cornerTreeInstruction,
 
     `<p>You will observe ${yellow_text} and ${purple_text} harvest berries over
     <strong>${numCoordinationRounds + 1} rounds</strong>.</p>
@@ -234,24 +257,48 @@ function setupGame() {
     };
   }
 
-  // Comprehension questions - test understanding of interdependence
-  var compQ1 = makeCompQuestion(
-    "1. How many berries does each farmer get if BOTH go to the center tree together?",
-    ["1 berry each", "5 berries each", "8 berries each"],
-    "8 berries each"
-  );
+  // Comprehension questions - vary by payoff condition
+  var compQ1, compQ2, compQ3;
 
-  var compQ2 = makeCompQuestion(
-    "2. How many berries does a farmer get if they go to the center tree ALONE?",
-    ["1 berry", "5 berries", "8 berries"],
-    "1 berry"
-  );
+  if (isInterdependent) {
+    // Interdependent: test understanding of coordination requirement
+    compQ1 = makeCompQuestion(
+      "1. How many berries does each farmer get if BOTH go to the center tree together?",
+      ["1 berry each", "5 berries each", "8 berries each"],
+      "8 berries each"
+    );
 
-  var compQ3 = makeCompQuestion(
-    "3. How many berries does a farmer get from a corner tree?",
-    ["1 berry", "5 berries", "8 berries"],
-    "5 berries"
-  );
+    compQ2 = makeCompQuestion(
+      "2. How many berries does a farmer get if they go to the center tree ALONE?",
+      ["1 berry", "5 berries", "8 berries"],
+      "1 berry"
+    );
+
+    compQ3 = makeCompQuestion(
+      "3. How many berries does a farmer get from a corner tree?",
+      ["1 berry", "5 berries", "8 berries"],
+      "5 berries"
+    );
+  } else {
+    // Independent: test understanding that all trees give same reward
+    compQ1 = makeCompQuestion(
+      "1. How many berries does a farmer get from the center tree?",
+      ["1 berry", "5 berries", "8 berries"],
+      "5 berries"
+    );
+
+    compQ2 = makeCompQuestion(
+      "2. How many berries does a farmer get from a corner tree?",
+      ["1 berry", "5 berries", "8 berries"],
+      "5 berries"
+    );
+
+    compQ3 = makeCompQuestion(
+      "3. Does the number of berries change if both farmers go to the same tree?",
+      ["Yes, they get more berries", "Yes, they get fewer berries", "No, they each get the same amount"],
+      "No, they each get the same amount"
+    );
+  }
 
   var comprehensionConclusion = {
     type: jsPsychHtmlButtonResponse,
@@ -372,7 +419,8 @@ function setupGame() {
         task: 'dv_question',
         dv_name: q.name,
         question_number: idx + 1,
-        repetition_condition: gs.session_info.repetition_condition
+        repetition_condition: gs.session_info.repetition_condition,
+        payoff_condition: gs.session_info.payoff_condition
       }
     }))
   };
@@ -513,7 +561,9 @@ function setupGame() {
         prolificID: gs.prolific_info.prolificID,
         studyID: gs.prolific_info.prolificStudyID,
         sessionID: gs.prolific_info.prolificSessionID,
-        condition: gs.session_info.condition
+        condition: gs.session_info.condition,
+        repetition_condition: gs.session_info.repetition_condition,
+        payoff_condition: gs.session_info.payoff_condition
       };
       // Get jsPsych data as array of plain objects
       const allData = jsPsych.data.get().values().map(trialData => ({

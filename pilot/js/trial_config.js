@@ -1,13 +1,14 @@
 
 // Trial configuration for joint commitment experiment
-// Generates trials dynamically based on repetition condition
+// Generates trials dynamically based on repetition and payoff conditions
 
 /**
  * Generate coordination trials where both agents go to center tree
  * @param {number} numRounds - Number of coordination rounds (2 or 6)
+ * @param {Object} payoffs - Payoff structure { center_solo, center_joint, corner }
  * @returns {Array} Array of trial configurations
  */
-function generateCoordinationTrials(numRounds) {
+function generateCoordinationTrials(numRounds, payoffs) {
   const trials = [];
   const centerPos = gs.experiment.center_tree.position;
 
@@ -27,19 +28,19 @@ function generateCoordinationTrials(numRounds) {
       tree_configs: [
         {
           isCenter: true,
-          solo_reward: gs.experiment.center_tree.solo_reward,
-          joint_reward: gs.experiment.center_tree.joint_reward
+          solo_reward: payoffs.center_solo,
+          joint_reward: payoffs.center_joint
         },
         ...gs.experiment.corner_trees.map(t => ({
           isCenter: false,
-          solo_reward: t.reward,
-          joint_reward: t.reward
+          solo_reward: payoffs.corner,
+          joint_reward: payoffs.corner
         }))
       ],
       // Legacy format for compatibility - will be overridden by new logic
       tree_rewards: [
-        [gs.experiment.center_tree.joint_reward, gs.experiment.center_tree.joint_reward],
-        ...gs.experiment.corner_trees.map(t => [t.reward, t.reward])
+        [payoffs.center_joint, payoffs.center_joint],
+        ...gs.experiment.corner_trees.map(t => [payoffs.corner, payoffs.corner])
       ],
       tree_visibility: [1, 1, 1],
       total_steps: 10,
@@ -54,9 +55,10 @@ function generateCoordinationTrials(numRounds) {
 /**
  * Generate the critical trial where Purple deviates to corner
  * @param {number} trialNumber - The trial number (after coordination rounds)
+ * @param {Object} payoffs - Payoff structure { center_solo, center_joint, corner }
  * @returns {Object} Critical trial configuration
  */
-function generateCriticalTrial(trialNumber) {
+function generateCriticalTrial(trialNumber, payoffs) {
   return {
     trial_number: trialNumber,
     trial_type: "critical",
@@ -72,19 +74,19 @@ function generateCriticalTrial(trialNumber) {
     tree_configs: [
       {
         isCenter: true,
-        solo_reward: gs.experiment.center_tree.solo_reward,
-        joint_reward: gs.experiment.center_tree.joint_reward
+        solo_reward: payoffs.center_solo,
+        joint_reward: payoffs.center_joint
       },
       ...gs.experiment.corner_trees.map(t => ({
         isCenter: false,
-        solo_reward: t.reward,
-        joint_reward: t.reward
+        solo_reward: payoffs.corner,
+        joint_reward: payoffs.corner
       }))
     ],
     tree_rewards: [
       // Show joint reward for both initially - actual payout determined after movement
-      [gs.experiment.center_tree.joint_reward, gs.experiment.center_tree.joint_reward],
-      ...gs.experiment.corner_trees.map(t => [t.reward, t.reward])
+      [payoffs.center_joint, payoffs.center_joint],
+      ...gs.experiment.corner_trees.map(t => [payoffs.corner, payoffs.corner])
     ],
     tree_visibility: [1, 1, 1],
     total_steps: 10,
@@ -97,14 +99,17 @@ function generateCriticalTrial(trialNumber) {
 }
 
 /**
- * Generate all trials for the experiment based on condition
- * @param {string} condition - 'low' or 'high' repetition condition
+ * Generate all trials for the experiment based on conditions
+ * @param {string} repetitionCondition - 'low' or 'high' repetition condition
+ * @param {string} payoffCondition - 'interdependent' or 'independent' payoff condition
  * @returns {Array} All trial configurations
  */
-function generateAllTrials(condition) {
-  const numRounds = gs.experiment.repetition_conditions[condition] || 2;
-  const coordinationTrials = generateCoordinationTrials(numRounds);
-  const criticalTrial = generateCriticalTrial(numRounds + 1);
+function generateAllTrials(repetitionCondition, payoffCondition) {
+  const numRounds = gs.experiment.repetition_conditions[repetitionCondition] || 2;
+  const payoffs = gs.experiment.payoff_conditions[payoffCondition] || gs.experiment.payoff_conditions.interdependent;
+
+  const coordinationTrials = generateCoordinationTrials(numRounds, payoffs);
+  const criticalTrial = generateCriticalTrial(numRounds + 1, payoffs);
 
   return [...coordinationTrials, criticalTrial];
 }

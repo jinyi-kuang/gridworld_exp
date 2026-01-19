@@ -4,8 +4,8 @@ const { test, expect } = require('@playwright/test');
 const BASE_URL = 'http://localhost:8080';
 
 // Helper to navigate through initial pages
-async function navigateToInstructions(page, condition = 'low') {
-  await page.goto(`${BASE_URL}?CONDITION=${condition}`);
+async function navigateToInstructions(page, condition = 'low', payoffCondition = 'interdependent') {
+  await page.goto(`${BASE_URL}?CONDITION=${condition}&PAYOFF_CONDITION=${payoffCondition}`);
   await expect(page.locator('text=Welcome')).toBeVisible({ timeout: 10000 });
   await page.locator('button', { hasText: 'Get Started' }).click();
   await page.locator('button', { hasText: 'I Agree' }).click();
@@ -26,7 +26,7 @@ async function navigateThroughInstructions(page) {
   await page.waitForTimeout(200);
 }
 
-// Helper to answer comprehension questions correctly
+// Helper to answer comprehension questions correctly (interdependent condition)
 async function answerComprehensionQuestions(page) {
   // Q1: 8 berries each
   await page.locator('button', { hasText: '8 berries each' }).click();
@@ -36,6 +36,19 @@ async function answerComprehensionQuestions(page) {
   await page.waitForTimeout(200);
   // Q3: 5 berries
   await page.locator('button', { hasText: '5 berries' }).click();
+  await page.waitForTimeout(200);
+}
+
+// Helper to answer comprehension questions (independent condition)
+async function answerComprehensionQuestionsIndependent(page) {
+  // Q1: 5 berries from center
+  await page.locator('button', { hasText: '5 berries' }).first().click();
+  await page.waitForTimeout(200);
+  // Q2: 5 berries from corner
+  await page.locator('button', { hasText: '5 berries' }).first().click();
+  await page.waitForTimeout(200);
+  // Q3: No, same amount
+  await page.locator('button', { hasText: 'No, they each get the same amount' }).click();
   await page.waitForTimeout(200);
 }
 
@@ -164,7 +177,7 @@ test.describe('Joint Commitment Experiment', () => {
       await page.locator('button', { hasText: 'Continue to Questions' }).click();
 
       // Question 1: Counterfactual
-      await expect(page.locator('text=sick tomorrow')).toBeVisible();
+      await expect(page.locator('text=center tree')).toBeVisible();
       await page.locator('button', { hasText: 'Continue' }).click();
 
       // Question 2: Agreement
@@ -251,6 +264,177 @@ test.describe('Joint Commitment Experiment', () => {
 
       await expect(yellowCounter).toContainText('1');
       await expect(purpleCounter).toContainText('5');
+    });
+
+    // Regression test: Critical trial config should specify joint reward (8) for display
+    // Bug: Previously tree_rewards showed solo reward (1) before movement decision was made
+    // Fix: tree_rewards now shows joint_reward so participants see 8 before agents move
+    test('REGRESSION: critical trial config shows joint reward for initial display', async ({ page }) => {
+      // Navigate to page to load global config
+      await page.goto(`${BASE_URL}?CONDITION=low&PAYOFF_CONDITION=interdependent`);
+      await expect(page.locator('text=Welcome')).toBeVisible({ timeout: 10000 });
+
+      // Verify the trial configuration has correct values
+      // The tree_rewards array should show joint reward (8) not solo reward (1)
+      const trialConfig = await page.evaluate(() => {
+        // Access the global game settings
+        if (window.gs && window.gs.experiment && window.gs.experiment.payoff_conditions) {
+          const payoffs = window.gs.experiment.payoff_conditions.interdependent;
+          return {
+            center_joint: payoffs.center_joint,
+            center_solo: payoffs.center_solo,
+            corner: payoffs.corner
+          };
+        }
+        return null;
+      });
+
+      // Verify the config exists
+      expect(trialConfig).not.toBeNull();
+
+      // The key fix: config should specify joint reward (8), not solo (1) for display
+      expect(trialConfig.center_joint).toBe(8);
+      expect(trialConfig.center_solo).toBe(1);
+      expect(trialConfig.corner).toBe(5);
+
+      // Also verify the generateCriticalTrial function uses joint reward for tree_rewards
+      const criticalTrialConfig = await page.evaluate(() => {
+        if (window.generateCriticalTrial && window.gs) {
+          const payoffs = window.gs.experiment.payoff_conditions.interdependent;
+          const trial = window.generateCriticalTrial(3, payoffs);
+          return {
+            tree_rewards_center: trial.tree_rewards[0],
+            tree_config_joint: trial.tree_configs[0].joint_reward,
+            tree_config_solo: trial.tree_configs[0].solo_reward
+          };
+        }
+        return null;
+      });
+
+      // If generateCriticalTrial is accessible, verify it shows joint reward
+      if (criticalTrialConfig) {
+        // tree_rewards should show [8, 8] for center tree, not [1, 1]
+        expect(criticalTrialConfig.tree_rewards_center[0]).toBe(8);
+        expect(criticalTrialConfig.tree_rewards_center[1]).toBe(8);
+        expect(criticalTrialConfig.tree_config_joint).toBe(8);
+        expect(criticalTrialConfig.tree_config_solo).toBe(1);
+      }
+    });
+
+  });
+
+  test.describe('Independent Payoff Condition', () => {
+
+    test('shows correct instructions for independent condition', async ({ page }) => {
+      await navigateToInstructions(page, 'low', 'independent');
+
+      // Navigate through first few instruction pages to payoff description
+      for (let i = 0; i < 3; i++) {
+        await page.locator('button', { hasText: 'Next' }).click();
+        await page.waitForTimeout(100);
+      }
+
+      // Should see "All trees yield the same number of berries"
+      await expect(page.locator('text=All trees yield the same number of berries')).toBeVisible();
+      await expect(page.locator('text=5 berries')).toBeVisible();
+    });
+
+    test('comprehension questions test uniform payoff understanding', async ({ page }) => {
+      await navigateToInstructions(page, 'low', 'independent');
+      await navigateThroughInstructions(page);
+
+      // Q1: How many berries from center tree?
+      await expect(page.locator('text=from the center tree')).toBeVisible();
+      await page.locator('button', { hasText: '5 berries' }).first().click();
+
+      // Q2: How many berries from corner tree?
+      await expect(page.locator('text=from a corner tree')).toBeVisible();
+      await page.locator('button', { hasText: '5 berries' }).first().click();
+
+      // Q3: Does coordination change berries?
+      await expect(page.locator('text=both farmers go to the same tree')).toBeVisible();
+      await page.locator('button', { hasText: 'No, they each get the same amount' }).click();
+
+      // Should see comprehension conclusion
+      await expect(page.locator('text=understand how')).toBeVisible();
+    });
+
+    test('critical trial: Yellow gets 5 at center (same as coordinated)', async ({ page }) => {
+      await navigateToInstructions(page, 'low', 'independent');
+      await navigateThroughInstructions(page);
+      await answerComprehensionQuestionsIndependent(page);
+      await page.locator('button', { hasText: 'Start Observing' }).click();
+
+      // Go through coordination rounds (both get 5 at center)
+      for (let round = 0; round < 2; round++) {
+        await page.locator('button', { hasText: 'Watch' }).click();
+        await waitForObservationComplete(page, '5');
+        await page.click('#submitBtn');
+      }
+
+      // Critical trial - Yellow gets 5 even going to center alone
+      await page.locator('button', { hasText: 'Watch' }).click();
+      await waitForObservationComplete(page, '5');
+
+      // Check berry counters: Yellow gets 5 (no penalty for solo), Purple gets 5 (corner)
+      const yellowCounter = page.locator('#agent0BerriesCounter');
+      const purpleCounter = page.locator('#agent1BerriesCounter');
+
+      await expect(yellowCounter).toContainText('5');
+      await expect(purpleCounter).toContainText('5');
+    });
+
+    test('coordination rounds: both agents get 5 berries in independent condition', async ({ page }) => {
+      await navigateToInstructions(page, 'low', 'independent');
+      await navigateThroughInstructions(page);
+      await answerComprehensionQuestionsIndependent(page);
+      await page.locator('button', { hasText: 'Start Observing' }).click();
+
+      // Start Round 1
+      await page.locator('button', { hasText: 'Watch' }).click();
+      await waitForObservationComplete(page, '5');
+
+      // Check berry counters show 5 each (independent condition)
+      const yellowCounter = page.locator('#agent0BerriesCounter');
+      const purpleCounter = page.locator('#agent1BerriesCounter');
+
+      await expect(yellowCounter).toContainText('5');
+      await expect(purpleCounter).toContainText('5');
+    });
+
+  });
+
+  test.describe('2x2 Design Conditions', () => {
+
+    test('high repetition + independent condition works correctly', async ({ page }) => {
+      await navigateToInstructions(page, 'high', 'independent');
+
+      // Navigate through instructions
+      for (let i = 0; i < 5; i++) {
+        await page.locator('button', { hasText: 'Next' }).click();
+        await page.waitForTimeout(100);
+      }
+
+      // Should see "7 rounds" (6 coordination + 1 critical)
+      await expect(page.locator('text=7 rounds')).toBeVisible();
+    });
+
+    test('condition parameters are logged correctly', async ({ page }) => {
+      // Listen for console logs
+      const consoleLogs = [];
+      page.on('console', msg => {
+        if (msg.type() === 'log') {
+          consoleLogs.push(msg.text());
+        }
+      });
+
+      await navigateToInstructions(page, 'high', 'independent');
+
+      // Find the experiment conditions log
+      const conditionLog = consoleLogs.find(log => log.includes('Experiment conditions'));
+      expect(conditionLog).toBeDefined();
+      expect(conditionLog).toContain('high');
+      expect(conditionLog).toContain('independent');
     });
 
   });
