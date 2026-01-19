@@ -332,7 +332,7 @@ function setupGame() {
   const dvQuestionConfigs = [
     {
       name: 'counterfactual',
-      prompt: `If ${purple_text} were sick tomorrow and couldn't come to the farm, how likely is ${yellow_text} to still go to the center tree?`,
+      prompt: `If ${purple_text} couldn't come to the farm to harvest the next plot without telling ${yellow_text}, how likely is ${yellow_text} to go to the center tree?`,
       labels: ['Very unlikely', 'Very likely']
     },
     {
@@ -342,7 +342,7 @@ function setupGame() {
     },
     {
       name: 'commitment',
-      prompt: `To what extent was ${purple_text} committed to harvesting the center tree with ${yellow_text}?`,
+      prompt: `To what extent was ${purple_text} and ${yellow_text} committed to harvesting the center tree together?`,
       labels: ['Not at all', 'Very much']
     },
     {
