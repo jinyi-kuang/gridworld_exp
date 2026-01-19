@@ -410,12 +410,12 @@ function setupGame() {
       slider_width: 500,
       require_movement: false,
       button_label: 'Continue',
-      on_finish: function(data) {
-        data.task = 'dv_question';
-        data.dv_name = q.name;
-        data.question_number = idx + 1;
-        data.repetition_condition = gs.session_info.repetition_condition;
-        data.payoff_condition = gs.session_info.payoff_condition;
+      data: {
+        task: 'dv_question',
+        dv_name: q.name,
+        question_number: idx + 1,
+        repetition_condition: gs.session_info.repetition_condition,
+        payoff_condition: gs.session_info.payoff_condition
       }
     }))
   };
@@ -566,9 +566,7 @@ function setupGame() {
         trial_type: trialData.trial_type,
         response: trialData.response,
         rt: trialData.rt || null,
-        timestamp: trialData.time_elapsed || null,
-        task: trialData.task,
-        dv_name: trialData.dv_name, 
+        ...trialData, 
         ...sessionMeta
       }));
 
