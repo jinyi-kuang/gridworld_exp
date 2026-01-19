@@ -7,9 +7,10 @@
  * @param {number} cellSize - The size of a grid cell in pixels.
  * @param {Array} leaves - Array of leaf objects for the tree, if any.
  * @param {Array} berries - Array of berry objects for the tree, if any.
+ * @param {Object} treeConfig - Optional config with isCenter, solo_reward, joint_reward
  */
 class Tree {
-  constructor(x, y, reward, isVisible, cellSize, agentType, leaves = [], berries = []) {
+  constructor(x, y, reward, isVisible, cellSize, agentType, leaves = [], berries = [], treeConfig = null) {
     this.canvas = document.getElementById('gridworldCanvas');
     this.ctx = this.canvas.getContext('2d');
     this.x = x;
@@ -17,6 +18,12 @@ class Tree {
     this.reward = reward;
     this.isVisible = isVisible;
     this.cellSize = cellSize;
+
+    // New: Center tree properties for interdependence
+    this.isCenter = treeConfig?.isCenter || false;
+    this.soloReward = treeConfig?.solo_reward || (Array.isArray(reward) ? reward[0] : reward);
+    this.jointReward = treeConfig?.joint_reward || (Array.isArray(reward) ? reward[0] : reward);
+    this.sizeMultiplier = this.isCenter ? (gs.experiment?.center_tree?.size_multiplier || 1.4) : 1.0;
 
     // Tree and berry colors
     this.treeColor = this.isVisible ? gs.tree.colors.visible : gs.tree.colors.invisible;
@@ -99,8 +106,11 @@ this.berryColors = {
   }
 
   generateLeaves() {
-    const maxRadius = this.cellSize * gs.tree.size.max_leaf_radius;
-    const leafCount = gs.tree.min_leaves + Math.floor(Math.random() * (gs.tree.max_leaves - gs.tree.min_leaves + 1));
+    // Apply size multiplier for center tree
+    const maxRadius = this.cellSize * gs.tree.size.max_leaf_radius * this.sizeMultiplier;
+    // More leaves for center tree
+    const baseLeafCount = gs.tree.min_leaves + Math.floor(Math.random() * (gs.tree.max_leaves - gs.tree.min_leaves + 1));
+    const leafCount = this.isCenter ? Math.floor(baseLeafCount * 1.3) : baseLeafCount;
 
     let leaves = [];
     for (let i = 0; i < leafCount; i++) {
@@ -116,7 +126,8 @@ this.berryColors = {
   }
 
   generateBerries() {
-    const foliageRadius = this.cellSize * gs.tree.size.max_leaf_radius;
+    // Apply size multiplier for center tree
+    const foliageRadius = this.cellSize * gs.tree.size.max_leaf_radius * this.sizeMultiplier;
     const berryRadius = foliageRadius * gs.tree.size.berry_radius;
     const numCandidates = 30;
 
@@ -217,12 +228,23 @@ this.berryColors = {
   //   });
   // }
 
-  shakeTree(agentType, callback) {
+  /**
+   * Shake tree and harvest berries
+   * @param {string} agentType - 'optimist' or 'pessimist'
+   * @param {function} callback - Called when animation completes
+   * @param {number} harvestCount - Optional: override number of berries to harvest (for partial harvest)
+   * @returns {number} Number of berries harvested
+   */
+  shakeTree(agentType, callback, harvestCount = null) {
     this.isVisible = true;
 
     const startTime = Date.now();
     const duration = gs.tree.animations.shake.duration;
     const shakeAmplitude = gs.tree.animations.shake.amplitude;
+
+    // Determine how many berries to harvest
+    const availableBerries = agentType === 'optimist' ? this.optimistBerries.length : this.pessimistBerries.length;
+    const berriesHarvested = harvestCount !== null ? Math.min(harvestCount, availableBerries) : availableBerries;
 
     const shake = () => {
       const elapsed = Date.now() - startTime;
@@ -233,26 +255,47 @@ this.berryColors = {
         requestAnimationFrame(shake);
       } else {
         this.offsetX = 0;
-        // new code
-        // Change color of berries based on agent type
-        // if (agentType === 'optimist') {
-        // if (agentType === 'optimist') {
-        //   this.optimistBerries = []; // Remove optimist berries
-        //   // console.log("remaining berries for optimist:", this.optimistBerries.length);
-        // } else if (agentType === 'pessimist') {
-        //   this.pessimistBerries = []; // Remove pessimist berries
-        //   // console.log("remaining berries for pessimist:", this.pessimistBerries.length);
-        // }
-        // Update combined berries array
-        // this.berries = [...this.optimistBerries, ...this.pessimistBerries];
-        // this.berryColor = gs.tree.colors.berry_picked;
         if (callback) callback();
       }
     };
     shake();
-    //return this.berries.length;
-    return agentType === 'optimist' ? this.optimistBerries.length : this.pessimistBerries.length;
 
+    return berriesHarvested;
+  }
+
+  /**
+   * Partial harvest animation for when agent harvests alone at center tree
+   * Shows reaching animation and only drops a few berries
+   * @param {string} agentType - 'optimist' or 'pessimist'
+   * @param {number} harvestCount - Number of berries to actually harvest
+   * @param {function} callback - Called when animation completes
+   */
+  partialHarvest(agentType, harvestCount, callback) {
+    this.isVisible = true;
+
+    const startTime = Date.now();
+    // Longer animation to show "struggling"
+    const duration = gs.tree.animations.shake.duration * 1.5;
+    const shakeAmplitude = gs.tree.animations.shake.amplitude * 0.6;
+
+    const shake = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = elapsed / duration;
+
+      if (progress < 1) {
+        // Smaller, slower shake to show struggling
+        this.offsetX = Math.sin(progress * Math.PI * gs.tree.animations.shake.speed * 0.7) * shakeAmplitude;
+        this.offsetY = Math.sin(progress * Math.PI * 2) * shakeAmplitude * 0.3; // Slight vertical wobble
+        requestAnimationFrame(shake);
+      } else {
+        this.offsetX = 0;
+        this.offsetY = 0;
+        if (callback) callback();
+      }
+    };
+    shake();
+
+    return harvestCount;
   }
 
   updatePathStatus(treeTrajectory) {

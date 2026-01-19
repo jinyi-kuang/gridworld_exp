@@ -17,10 +17,13 @@ class Gridworld {
     // new code
     const agentType = this.trial_config.agent_types[currentAgentIdx];
 
-    this.trees = treesData ? treesData.map(treeData =>
-      new Tree(treeData.x, treeData.y, treeData.reward, treeData.isVisible, this.cellSize, agentType,treeData.leaves, treeData.berries)
+    // Get tree configs if available (for center tree sizing)
+    const treeConfigs = this.trial_config.tree_configs || [];
+
+    this.trees = treesData ? treesData.map((treeData, index) =>
+      new Tree(treeData.x, treeData.y, treeData.reward, treeData.isVisible, this.cellSize, agentType, treeData.leaves, treeData.berries, treeConfigs[index] || null)
     ) : this.trial_config.tree_positions.map((location, index) =>
-      new Tree(location[0] - 1, location[1] - 1, this.trial_config.tree_rewards[index], this.trial_config.tree_visibility[index], this.cellSize, agentType)
+      new Tree(location[0] - 1, location[1] - 1, this.trial_config.tree_rewards[index], this.trial_config.tree_visibility[index], this.cellSize, agentType, [], [], treeConfigs[index] || null)
     );
 
     // new code: handle multiple agents
@@ -518,7 +521,6 @@ class Gridworld {
 
 // OBSERVATION TRIALS: animate agent movement along actual path
   animateAgentMovement(currentAgentIdx, start, end, offsetEndPosition, speed, isUndo = false, view_only = false, callback) {
-    //console.log('animateAgentMovement with offsetEndPosition:', offsetEndPosition);
     var dx = end[0] - start[0];
     var dy = end[1] - start[1];
 
@@ -573,11 +575,8 @@ class Gridworld {
       if (currentHorizontalStep < totalHorizontalSteps || currentVerticalStep < totalVerticalSteps) {
         requestAnimationFrame(animateStep);
       } else {
-        // console.log('animation complete for agent:', currentAgentIdx);
-        // console.log('end:', end, 'offsetX:', offsetX, 'offsetY:', offsetY);
         this.agents[currentAgentIdx].x = end[0] + offsetX;
         this.agents[currentAgentIdx].y = end[1] + offsetY;
-
 
         if (callback && typeof callback === 'function') {
           callback();

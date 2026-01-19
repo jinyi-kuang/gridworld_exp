@@ -27,7 +27,16 @@ function setupGame() {
   gs.prolific_info.prolificStudyID = urlParams.get('STUDY_ID');
   gs.prolific_info.prolificSessionID = urlParams.get('SESSION_ID');
   gs.session_info.gameID = UUID();
-  gs.session_info.condition = trial_stims.condition;
+
+  // Assign repetition condition (between-subjects: 'low' = 2 rounds, 'high' = 6 rounds)
+  const conditionParam = urlParams.get('CONDITION');
+  gs.session_info.repetition_condition = conditionParam || (Math.random() < 0.5 ? 'low' : 'high');
+
+  // Generate trials based on condition
+  const experimentTrials = generateAllTrials(gs.session_info.repetition_condition);
+  const numCoordinationRounds = gs.experiment.repetition_conditions[gs.session_info.repetition_condition];
+
+  console.log("Experiment condition:", gs.session_info.repetition_condition, "Trials:", experimentTrials.length);
 
   // jsdatapipe data filename
   // Random 10-character ID
@@ -143,40 +152,37 @@ function setupGame() {
 
   // Define task instructions language
   var taskInstructionsHTML = [
-    ` <p>Overview</p>
-    <p>Imagine you are a <b>berry retailer</b>. </p>
-     <p>Your job is buy berries from local farmers and then sell them at a market in town.</p>
-     <p>Today, you will be observing two different farmers, ${yellow_text} Farmer and ${purple_text} Farmer.</p>
-     <p>${yellow_text} Farmer and ${purple_text} Farmer work on the same land.</p>
-     <img height="550" src="assets/image/agent_intro.png">`,
+    `<p>Imagine you are observing two farmers, ${yellow_text} and ${purple_text},
+     as they harvest berries from trees on a shared farm.</p>
+     <p>Your job is to watch how they work together over several rounds,
+     and then answer some questions about what you observed.</p>`,
 
-    `<p>The Farm</p>
-    <p>The farm has a number of different <em>plots</em> that must be harvested.</p>
-     <p>Each plot is <em>10</em> squares wide and <em>10</em> squares tall</p>
-     <p>There are <em>berry trees</em> distributed throughout the plot, just like this.</p>
-     <img height="550" src="assets/image/gridworld.png">`,
+    `<p>The farm is a <em>10</em> squares wide and <em>10</em> squares tall grid, just like this:</p>
+   <img height="500" src="assets/image/gridworld.png">
+   <p>There are <em>berry trees</em> located on the farm.</p>`,
 
-    `<p>Tree Berries</p>
-    <p>On every tree, there are <em>two different type of berry</em>, yellow berries and purple berries.</p>
-    <p>There are different numbers of berries growing on each tree.</p>
-    <p>Some trees have more yellow berries than purple berries.</p>
-    <p>Other trees have more purple berries than yellow ones, and some have equal numbers of both. </p>`,
+    `<p>Each tree produces two types of berries: yellow berries and purple berries.</p>
+   <p>${yellow_text} only harvests yellow berries, while ${purple_text} only harvests purple berries.</p>
+   <img height="500" src="assets/image/harvest.png">`,
 
-    `<p>Farmer Roles</p>
-    <p>When the farmers harvest a tree, ${yellow_text} gathers the yellow berries and ${purple_text} gathers the purple berries. </p>
-     <img height="550" src="assets/image/harvest.png">`,
+    `<p><strong>Important:</strong> The <em>large tree in the center</em> has the most berries,
+    but it requires <strong>both farmers working together</strong> to harvest fully. The branches
+    are too high for one farmer to reach alone.</p>
+    <p>When both farmers go to the center tree together, they each get <strong>8 berries</strong>.</p>
+    <p>If only one farmer goes to the center tree alone, they can only reach <strong>1 berry</strong>.</p>`,
 
-  `<p>Harvesting Process</p>
-  <p>It takes time to harvest, so when the farmers harvest a plot, each of them chooses just one tree to harvest.</p>
-  <p>They can go anywhere in the plot, but they only have time to harvest a single tree. </p>
-  <p><em>If they both harvest the same tree, they can help each other out and gather more berries.</em></p>
-  <p><em>If they choose to harvest different trees, they can\’t gather as many berries as they do together.</em></p>
-  <p>After they harvest, they put the berries they collected into their own baskets. </p>`,
+    `<p>The <em>smaller trees in the corners</em> can be harvested by one farmer alone.</p>
+    <p>A farmer who goes to a corner tree will get <strong>5 berries</strong>.</p>`,
 
-   `<p>Before we get started, let\'s take a moment to make sure everything is <em>crystal clear</em>. </p> 
-   <p>On the next screen, you will be presented with several questions about these instructions.</p>
-   <p>Please answer them as best you can.</p>
-   <p>You will not be able to proceed to the task until you have answered all of them correctly.</p>`,
+    `<p>You will observe ${yellow_text} and ${purple_text} harvest berries over
+    <strong>${numCoordinationRounds + 1} rounds</strong>.</p>
+    <p>Watch carefully how they coordinate (or don't) at each tree!</p>`,
+
+    `<p>After observing the farmers, you will answer some questions about what you saw
+    and what you think about their behavior.</p>`,
+
+   '<p>Let\'s get started!</p> \
+      <p>We\'re going to ask you three questions to check your understanding.</p>'
   ];
 
   var taskInstructions = {
@@ -212,14 +218,13 @@ function setupGame() {
             // Shuffle options every time this trial is shown
             return jsPsych.randomization.shuffle(options.slice());
           },
-          margin_horizontal: "800px", // TODO consider updating CSS directly to stack the buttons vertically? (or keep horizontal)
+          button_html: '<button class="jspsych-btn" style="display:block; margin: 10px auto; min-width: 150px;">%choice%</button>',
           margin_vertical: "20px",
           on_finish: function(data) {
             // Save the shuffled options for this trial
             const shuffledOptions = this.choices;
             // Mark correctness based on the shuffled options
             data.comp_correct = shuffledOptions[data.response] === correctAnswer;
-            button_html: '<button class="jspsych-btn" style="display:block; width:100%; margin: 5px 0;">%choice%</button>'
           }
         }
       ],
@@ -230,164 +235,147 @@ function setupGame() {
     };
   }
 
-  // Example questions
+  // Comprehension questions - test understanding of interdependence
   var compQ1 = makeCompQuestion(
-    "1. Which of the following best describes the ${yellow_text} Farmer and ${purple_text} Farmer's harvesting?",
-    ["Both farmers harvest both types of berries, as long as they are at the same tree", 
-    "${yellow_text} Farmer harvests yellow berries and ${purple_text} Farmer harvests purple berries, but only when they are at the same tree (at different trees, they harvest both berries)",
-    "${yellow_text} Farmer harvests yellow berries and ${purple_text} Farmer harvests purple berries, no matter whether they are at the same tree or different trees."],
-    "${yellow_text} Farmer harvests yellow berries and ${purple_text} Farmer harvests purple berries, no matter whether they are at the same tree or different trees."
+    "1. How many berries does each farmer get if BOTH go to the center tree together?",
+    ["1 berry each", "5 berries each", "8 berries each"],
+    "8 berries each"
   );
 
   var compQ2 = makeCompQuestion(
-    "2. Which of the following best describes the ${yellow_text} Farmer and ${purple_text} Farmer\’s harvesting?",
-    ["Each farmer can only harvest one tree in a given plot, but they can choose any one.",
-    "Each farmer can only harvest one tree in a given plot, and they must choose the same tree to harvest it.", 
-    "Each farmer can harvest more than one tree in a given plot, as long as they choose the same ones."],
-    "Each farmer can only harvest one tree in a given plot, but they can choose any one."
+    "2. How many berries does a farmer get if they go to the center tree ALONE?",
+    ["1 berry", "5 berries", "8 berries"],
+    "1 berry"
   );
 
   var compQ3 = makeCompQuestion(
-    "3. Which of the following best describes the ${yellow_text} Farmer and ${purple_text} Farmer\’s harvesting?",
-    ["All trees have the same number of yellow and purple berries; the farmers can each harvest more when they harvest the same tree.",
-    "Different trees have different numbers of yellow and purple berries; the farmers can each harvest more when they harvest the same tree.", 
-    "Different trees have different numbers of yellow and purple berries; the farmers harvest the same amount regardless of whether they choose the same tree."],
-    "Different trees have different numbers of yellow and purple berries; the farmers can each harvest more when they harvest the same tree."
+    "3. How many berries does a farmer get from a corner tree?",
+    ["1 berry", "5 berries", "8 berries"],
+    "5 berries"
   );
-  }
-
-  var comprehensionConclusionHTML = [
-      `<p>Great job! Now it\’s time to get started with the task. <\p>
-      <p>You are going to see a series of plots that ${yellow_text} Farmer and ${purple_text} Farmer are harvesting one at a time.</p>
-      <p>Your job is to take a look at the plot and predict which tree each farmer will harvest.</p>`,
-
-      `<p>In each trial, you\’ll start with ${yellow_text} Farmer. </p>
-      <p>Click any tree to see the path they would take to harvest.</p>
-      <p>You can change your choice by clicking a different tree, or click the farmer to restart.</p>
-      <p>When you\’re ready, click <b>Next</b> to submit your prediction. </p>`,
-
-      `<p>After you make your prediction for ${yellow_text} Farmer, your job is to make a similar prediction for ${purple_text} Farmer.</p>`,
-
-      `<p>Once you\’ve made your prediction for both farmers, you\’ll be able to see where they actually harvest in that plot, and how many berries they each gathered.</p>
-      <p><em>Pay attention to which trees they harvest to learn how these farmers harvest their farm!</em></p>`,
-
-      `<p>Let’s get started! </p>
-      <p>Click <b>Next</b> to watch the farmers harvest their first plot of the day. </p>`,
-  ];
 
   var comprehensionConclusion = {
-    type: jsPsychInstructions,
-    pages: comprehensionConclusionHTML,
-    show_clickable_nav: true,
-    allow_keys: false,
-    allow_backward: true,
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <p>Great job! You understand how ${yellow_text} and ${purple_text} harvest their farm.</p>
+      <p>Now you will observe them harvest berries over <strong>${numCoordinationRounds + 1} rounds</strong>.</p>
+      <p>Pay close attention to which trees they go to and how many berries they collect!</p>
+    `,
+    choices: ['Start Observing'],
+    margin_vertical: "20px",
   };
-  
+
   /* ---------------------------------------------------------
-  TRIAL
+  TRIAL - Observation Only (no predictions)
 --------------------------------------------------------- */
   var trialProcedure = {
     timeline: [
+      // Round intro
       {
         type: jsPsychHtmlButtonResponse,
         stimulus: function () {
-          const idx = jsPsych.timelineVariable('index') + 1;
+          const trialData = jsPsych.timelineVariable('data');
+          const idx = trialData.trial_number;
+          const isCritical = trialData.trial_type === 'critical';
+          const roundLabel = isCritical ? 'Final Round' : `Round ${idx}`;
+
           return (
-            '<p>Nice job! Now ' +
+            '<p>' +
             yellow_text +
             ' and ' +
             purple_text +
-            ' will harvest plot ' +
-            '<span style="font-size: 36px; font-weight: bold;">' +
-            idx +
-            '</span>.</p>'
+            ' will now harvest berries.</p>' +
+            '<p style="font-size: 36px; font-weight: bold;">' +
+            roundLabel +
+            '</p>'
           );
         },
-        choices: ['Continue'],
+        choices: ['Watch'],
         margin_vertical: "20px"
       },
-      _.extend({}, gs.study_metadata, gs.session_info, {
-        type: jsPsychNormAgentPredict,
-        trial_config: jsPsych.timelineVariable('data'),
-        agent_index: 0,
-        render_previous_path: false,
-        on_finish: function (data) {
-          // new code: Save agent 0's path for use in agent 1's trial
-          var lastTrial = jsPsych.data.get().last(1).values()[0];
-          agent0_path_predict = lastTrial.coordinate_trajectory || [];
-        }
-      }),
-      //{
-      //  type: jsPsychHtmlButtonResponse,
-      //  stimulus: '<p>Nice job! Now it\'s time to predict what ' + purple_text + ' will do.</p>',
-      //  choices: ['Continue'],
-      //  margin_vertical: "20px"
-      // },
-      _.extend({}, gs.study_metadata, gs.session_info, {
-        type: jsPsychNormAgentPredict,
-        trial_config: jsPsych.timelineVariable('data'),
-        agent_index: 1,
-        render_previous_path: true,
-        previous_path: function () { return agent0_path_predict; },
-        on_finish: function (data) {
-          // new code: Save agent 0's path for use in agent 1's trial
-          var lastTrial = jsPsych.data.get().last(1).values()[0];
-          agent1_path_predict = lastTrial.coordinate_trajectory || [];
-          agents_path_predict = agent0_path_predict.concat(agent1_path_predict);
-        }
-      }),
-      //{
-      //  type: jsPsychHtmlButtonResponse,
-      //  stimulus: '<p>Now it\'s time to observe what ' + yellow_text + ' and ' + purple_text + ' did.</p>',
-      //  choices: ['Continue'],
-      //  margin_vertical: "20px"
-      //},
+      // Observation trial (no predictions)
       _.extend({}, gs.study_metadata, gs.session_info, {
         type: jsPsychNormAgentObserve,
         trial_config: jsPsych.timelineVariable('data'),
-        render_previous_path: true,
+        render_previous_path: false,
+        previous_path: [],
         on_finish: function (data) {
-          // new code: Save agent 0's path for use in agent 1's trial
           var lastTrial = jsPsych.data.get().last(1).values()[0];
-          // Save path info
-          //agent0_path_observe = lastTrial.actual_trajectory || [];
-          //agent0_end_position = lastTrial.actual_trajectory ? lastTrial.actual_trajectory.slice(-1)[0] : null;
-          // Save basket info
+          // Save basket info for DV display
           agent0_berries = lastTrial.berries_collected.agent0 || null;
           agent1_berries = lastTrial.berries_collected.agent1 || null;
-        },
-        previous_path: function () { return agents_path_predict; },
 
+          // Log trial type for debugging
+          const trialData = jsPsych.timelineVariable('data');
+          console.log("Completed trial:", trialData.trial_type, "Berries:", agent0_berries, agent1_berries);
+        },
       }),
     ],
-    timeline_variables: testTrials.map((stim, idx) => ({ data: stim, index: idx })),
+    timeline_variables: experimentTrials.map((stim, idx) => ({ data: stim, index: idx })),
   };
 
   /* ---------------------------------------------------------
-     PURCHASE DECISION
+     TRANSITION TO DV QUESTIONS (after critical trial)
  --------------------------------------------------------- */
-  var purchaseIntro = {
+  var dvTransition = {
     type: jsPsychHtmlButtonResponse,
-    stimulus: '<p>Nice work! Now, it’s time to fulfill your role as a berry retailer. </p>' +
-      '<p>On the next screen, you will be shown the number of berries each farmer gathered in their most recent harvest.</p>' +
-      '<p>You will be asked how many berries you want to purchase from each farmer.</p>' +
-      '<p>You will make a profit on all the berries you purchase, no matter how many. </p>' +
-      '<p>The more you purchase from each farmer, the more money that farmer makes.</p>' +
-      '<p><em>Any berries you do not purchase will go to waste and the farmer who picked them will lose money on those berries. </em></p>' +
-      '<p>Click <b>Continue</b> to make your purchase decision.</p>',
-    choices: ['Continue'],
-    margin_vertical: "20px"
+    stimulus: `
+      <p>You've finished observing ${yellow_text} and ${purple_text}!</p>
+      <p>In that last round, ${purple_text} went to a <strong>different tree</strong> than ${yellow_text}.</p>
+      <p>Now we'd like to ask you some questions about what you observed.</p>
+    `,
+    choices: ['Continue to Questions'],
+    margin_vertical: "20px",
+    post_trial_gap: 500
   };
 
-  var purchaseDecision = {
-    type: jsPsychNormAgentEvaluate,
-    yellow_name: gs.agent.names['optimist'],
-    purple_name: gs.agent.names['pessimist'],
-    yellow_color: convertToHSL(gs.agent.colors['optimist']),
-    purple_color: convertToHSL(gs.agent.colors['pessimist']),
-    data: {
-      task: 'berry_purchase'
+  // DV Questions - one per page using standard jsPsych slider
+  const dvQuestionConfigs = [
+    {
+      name: 'counterfactual',
+      prompt: `If ${purple_text} were sick tomorrow and couldn't come to the farm, how likely is ${yellow_text} to still go to the center tree?`,
+      labels: ['Very unlikely', 'Very likely']
+    },
+    {
+      name: 'agreement',
+      prompt: `To what extent do you think ${yellow_text} and ${purple_text} had an unspoken agreement to harvest the center tree together?`,
+      labels: ['Not at all', 'Very much']
+    },
+    {
+      name: 'commitment',
+      prompt: `To what extent was ${purple_text} committed to harvesting the center tree with ${yellow_text}?`,
+      labels: ['Not at all', 'Very much']
+    },
+    {
+      name: 'anger',
+      prompt: `How angry would ${yellow_text} feel that ${purple_text} went to a different tree?`,
+      labels: ['Not at all angry', 'Very angry']
+    },
+    {
+      name: 'guilt',
+      prompt: `How guilty would ${purple_text} feel about going to a different tree?`,
+      labels: ['Not at all guilty', 'Very guilty']
     }
+  ];
+
+  var dvQuestions = {
+    timeline: dvQuestionConfigs.map((q, idx) => ({
+      type: jsPsychHtmlSliderResponse,
+      stimulus: `<p style="font-size: 22px; max-width: 700px; margin: 0 auto; line-height: 1.5;">${q.prompt}</p>`,
+      labels: q.labels,
+      min: 0,
+      max: 100,
+      start: 50,
+      slider_width: 500,
+      require_movement: false,
+      button_label: 'Continue',
+      data: {
+        task: 'dv_question',
+        dv_name: q.name,
+        question_number: idx + 1,
+        repetition_condition: gs.session_info.repetition_condition
+      }
+    }))
   };
 
   /* ---------------------------------------------------------
@@ -581,8 +569,8 @@ function setupGame() {
     compQ3,
     comprehensionConclusion,
     trialProcedure,
-    purchaseIntro,
-    purchaseDecision,
+    dvTransition,
+    dvQuestions,
     preSurveyMessage,
     exitSurvey,
     saveData,
