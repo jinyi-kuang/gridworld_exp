@@ -14,7 +14,9 @@ gs = {
   },
   session_info: {
     gameID: undefined,
-    condition: 'trait_causal', // environment_counterfactual, trait_counterfactual, environment_causal, trait_causal, causal_selection
+    condition: 'trait_causal', // legacy - kept for compatibility
+    repetition_condition: undefined, // 'low' (2 rounds) or 'high' (6 rounds)
+    payoff_condition: undefined, // 'interdependent' or 'independent'
     on_finish: undefined,
   },
   prolific_info: {
@@ -22,11 +24,49 @@ gs = {
     prolificStudyID: undefined,
     prolificSessionID: undefined,
   },
+  experiment: {
+    repetition_conditions: {
+      low: 2,
+      high: 6
+    },
+    payoff_conditions: {
+      interdependent: {
+        center_solo: 1,
+        center_joint: 8,
+        corner: 5
+      },
+      independent: {
+        center_solo: 5,
+        center_joint: 5,
+        corner: 5
+      }
+    },
+    center_tree: {
+      position: [5, 5],
+      size_multiplier: 1.4
+    },
+    corner_trees: [
+      { position: [2, 2] },
+      { position: [9, 9] }
+    ],
+    critical_trial: {
+      yellow_target: [5, 5],  // center
+      purple_target: [9, 9]   // corner
+    }
+  },
+  dv_questions: {
+    counterfactual: "If Purple were sick tomorrow and couldn't come to the farm, how likely is Yellow to still go to the center tree?",
+    agreement: "To what extent do you think Yellow and Purple had an unspoken agreement to harvest the center tree together?",
+    commitment: "To what extent was Purple committed to harvesting the center tree with Yellow?",
+    anger: "How angry would Yellow feel that Purple went to a different tree?",
+    guilt: "How guilty would Purple feel about going to a different tree?"
+  },
   game_info: {
     berries_needed: 20,
     cue_duration: 1500,
     start_delay: 1000,
     end_delay: 500,
+    critical_trial_delay: 3000, // ms to show baskets before DVs
   },
   agent: {
     names: {

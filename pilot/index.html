@@ -46,6 +46,7 @@
   <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.3"></script>
   <script src="https://unpkg.com/@jspsych/plugin-browser-check@1.0.3"></script>
   <script src="https://unpkg.com/@jspsych/plugin-survey-html-form@1.0.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-slider-response@1.1.3"></script>
 
 
   <!-- Remote js -->
@@ -69,12 +70,11 @@
   <!-- norm agent plugins -->
   <script src="js/jspsych/norm-agent-plugins/plugin-norm-agent-predict.js"></script>
   <script src="js/jspsych/norm-agent-plugins/plugin-norm-agent-observe.js"></script>
-  <script src="js/jspsych/norm-agent-plugins/plugin-norm-agent-evaluate.js"></script>
 
-  <!-- local stimuli -->
-   <script src="js/trial_config.js"></script>
-  <script src="assets/local_stim.js"></script>
+  <!-- game settings must load before trial_config -->
   <script src="js/game_settings.js"></script>
+  <script src="js/trial_config.js"></script>
+  <script src="assets/local_stim.js"></script>
   <script src="js/setup.js"></script>
 </head>
 <body>

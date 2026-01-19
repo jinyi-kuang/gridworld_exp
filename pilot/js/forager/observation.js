@@ -1,16 +1,113 @@
 /**
- * Starts the observation of the agent's trajectory in the Gridworld.
- * @param {Gridworld} gridworld - The Gridworld instance.
- * @param {Object} trial_config - Data containing the observed trajectory and agent start position.
+ * Observation module for joint commitment experiment
+ * Handles agent movement and interdependent berry collection
  */
-function startObservation(gridworld, currentAgentIdx, agentType, startPosition, endPosition, offsetEndPosition) {
 
-  console.log("Starting observation with:", {
-    gridworld: gridworld,
-    agentType: agentType,
-    trees: gridworld.trees,
+// Track agent arrivals for coordinated harvest
+let agentArrivals = {
+  agent0: { arrived: false, endPosition: null, tree: null },
+  agent1: { arrived: false, endPosition: null, tree: null }
+};
+
+/**
+ * Reset arrival tracking for new trial
+ */
+function resetAgentArrivals() {
+  agentArrivals = {
+    agent0: { arrived: false, endPosition: null, tree: null },
+    agent1: { arrived: false, endPosition: null, tree: null }
+  };
+}
+
+/**
+ * Check if both agents are at the same tree (center tree coordination)
+ * @param {Gridworld} gridworld - The Gridworld instance
+ * @returns {boolean} True if both agents ended at the same tree
+ */
+function areBothAgentsAtSameTree(gridworld) {
+  const pos0 = agentArrivals.agent0.endPosition;
+  const pos1 = agentArrivals.agent1.endPosition;
+
+  if (!pos0 || !pos1) return false;
+
+  return pos0[0] === pos1[0] && pos0[1] === pos1[1];
+}
+
+/**
+ * Determine berry reward for an agent based on coordination
+ * @param {Tree} tree - The target tree
+ * @param {string} agentType - 'optimist' or 'pessimist'
+ * @param {boolean} isCoordinated - Whether both agents are at this tree
+ * @returns {number} Number of berries to harvest
+ */
+function determineBerryReward(tree, agentType, isCoordinated) {
+  if (!tree) return 0;
+
+  // If tree has interdependence config (center tree)
+  if (tree.isCenter) {
+    return isCoordinated ? tree.jointReward : tree.soloReward;
+  }
+
+  // Regular corner tree - always get full reward
+  return agentType === 'optimist' ? tree.optimistBerries.length : tree.pessimistBerries.length;
+}
+
+/**
+ * Perform harvest animation after both agents have arrived
+ * @param {Gridworld} gridworld - The Gridworld instance
+ */
+function performCoordinatedHarvest(gridworld) {
+  const isCoordinated = areBothAgentsAtSameTree(gridworld);
+
+  console.log("Performing coordinated harvest:", {
+    isCoordinated,
+    agent0Pos: agentArrivals.agent0.endPosition,
+    agent1Pos: agentArrivals.agent1.endPosition
   });
 
+  // Process each agent's harvest
+  ['agent0', 'agent1'].forEach((agentKey, idx) => {
+    const arrival = agentArrivals[agentKey];
+    const tree = arrival.tree;
+    const agentType = idx === 0 ? 'optimist' : 'pessimist';
+
+    if (tree) {
+      const berryCount = determineBerryReward(tree, agentType, isCoordinated);
+
+      // Use partial harvest animation for solo center tree attempt
+      if (tree.isCenter && !isCoordinated) {
+        tree.partialHarvest(agentType, berryCount, () => {
+          gridworld.inObservation = false;
+          gridworld.collectBerries(berryCount, agentType);
+        });
+      } else {
+        // Normal full harvest
+        tree.shakeTree(agentType, () => {
+          gridworld.inObservation = false;
+          gridworld.collectBerries(berryCount, agentType);
+        }, berryCount);
+      }
+    }
+  });
+
+  // Enable submit button after harvest
+  setTimeout(() => {
+    const submitBtn = document.getElementById('submitBtn');
+    if (submitBtn) submitBtn.disabled = false;
+  }, gs.tree.animations.shake.duration * 1.5 + 100);
+}
+
+/**
+ * Starts the observation of an agent's trajectory in the Gridworld.
+ * Waits for both agents to arrive before harvesting.
+ * @param {Gridworld} gridworld - The Gridworld instance.
+ * @param {number} currentAgentIdx - Index of the current agent (0 or 1)
+ * @param {string} agentType - 'optimist' or 'pessimist'
+ * @param {Array} startPosition - [x, y] start position
+ * @param {Array} endPosition - [x, y] target position
+ * @param {boolean} offsetEndPosition - Whether to offset position when both at same spot
+ */
+function startObservation(gridworld, currentAgentIdx, agentType, startPosition, endPosition, offsetEndPosition) {
   gridworld.animateAgentMovement(
     currentAgentIdx,
     startPosition,
@@ -25,8 +122,41 @@ function startObservation(gridworld, currentAgentIdx, agentType, startPosition, 
         tree.x === endPosition[0] && tree.y === endPosition[1]
       );
 
+      // Record this agent's arrival
+      const agentKey = currentAgentIdx === 0 ? 'agent0' : 'agent1';
+      agentArrivals[agentKey] = {
+        arrived: true,
+        endPosition: endPosition,
+        tree: targetTree
+      };
+
+      // Check if both agents have arrived
+      if (agentArrivals.agent0.arrived && agentArrivals.agent1.arrived) {
+        // Both arrived - perform coordinated harvest
+        performCoordinatedHarvest(gridworld);
+      }
+    });
+}
+
+/**
+ * Legacy function for simple observation without coordination tracking
+ * Used for backward compatibility
+ */
+function startSimpleObservation(gridworld, currentAgentIdx, agentType, startPosition, endPosition, offsetEndPosition) {
+  gridworld.animateAgentMovement(
+    currentAgentIdx,
+    startPosition,
+    endPosition,
+    offsetEndPosition,
+    gs.agent.animations.speed,
+    false,
+    false,
+    () => {
+      const targetTree = gridworld.trees.find(tree =>
+        tree.x === endPosition[0] && tree.y === endPosition[1]
+      );
+
       if (targetTree) {
-        // Shake the tree if found
         targetTree.shakeTree(agentType, () => {
           gridworld.inObservation = false;
           const numBerries = agentType === 'optimist' ? targetTree.optimistBerries.length : targetTree.pessimistBerries.length;
@@ -34,74 +164,8 @@ function startObservation(gridworld, currentAgentIdx, agentType, startPosition, 
           document.getElementById('submitBtn').disabled = false;
         });
       } else {
-        // If no tree found, just finish the observation
         gridworld.inObservation = false;
         document.getElementById('submitBtn').disabled = false;
       }
     });
 }
-
-
-// /**
-//  * Moves the agent to the next step in the observed trajectory.
-//  * @param {number} stepIndex - Index of the current step in the observed trajectory.
-//  */
-// function nextStep(stepIndex) {
-//   if (stepIndex < trial_config.observed_trajectory.length) {
-//     const currentPosition = stepIndex === 0 ?
-//       [trial_config.agent_start_positions[0] - 1, trial_config.agent_start_positions[1] - 1] :
-//       [trial_config.observed_trajectory[stepIndex - 1][0] - 1, trial_config.observed_trajectory[stepIndex - 1][1] - 1];
-
-//     const nextPosition = [
-//       trial_config.observed_trajectory[stepIndex][0] - 1,
-//       trial_config.observed_trajectory[stepIndex][1] - 1
-//     ];
-
-//     gridworld.animateAgentMovement(currentPosition, nextPosition, gs.agent.animations.speed, false, false, () => {
-//       const treeIndex = gridworld.trees.findIndex(tree => tree.x === nextPosition[0] && tree.y === nextPosition[1]);
-
-//       if (treeIndex !== -1) {
-//         const berriesCollected = gridworld.trees[treeIndex].shakeTree(() => {
-//           nextStep(stepIndex + 1);
-//         });
-//         //gridworld.basket.addBerries(berriesCollected);
-//       } else {
-//         nextStep(stepIndex + 1);
-//       }
-//     });
-//   } else {
-//     returnHome(stepIndex - 1);
-//   }
-// }
-// Animate agent from start to target tree
-
-
-
-// /**
-//  * Returns the agent to the starting position.
-//  * @param {number} stepIndex - Index of the current step in the observed trajectory.
-//  */
-// function returnHome(stepIndex) {
-//   if (stepIndex >= 0) {
-//     const currentPosition = [
-//       trial_config.observed_trajectory[stepIndex][0] - 1,
-//       trial_config.observed_trajectory[stepIndex][1] - 1
-//     ];
-
-//     const nextPosition = stepIndex === 0 ?
-//       [trial_config.agent_start_position[0] - 1, trial_config.agent_start_position[1] - 1] :
-//       [trial_config.observed_trajectory[stepIndex - 1][0] - 1, trial_config.observed_trajectory[stepIndex - 1][1] - 1];
-
-//     gridworld.animateAgentMovement(currentPosition, nextPosition, gs.agent.animations.return_speed, true, true, () => {
-//       returnHome(stepIndex - 1);
-//     });
-//   } else {
-//     gridworld.inObservation = false;
-//     setTimeout(() => {
-//       document.getElementById('submitBtn').click();
-//     }, end_delay);
-//   }
-// }
-
-//  nextStep(0); // Start the observation
-//}

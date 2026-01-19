@@ -131,6 +131,11 @@ var jsPsychNormAgentObserve = (function(jspsych) {
         ? trial.previous_berries_info()
         : trial.previous_berries_info;
 
+      // Reset agent arrival tracking for coordinated harvest
+      if (typeof resetAgentArrivals === 'function') {
+        resetAgentArrivals();
+      }
+
       const submitBtn = document.getElementById('submitBtn');
 
       // disable button initially
