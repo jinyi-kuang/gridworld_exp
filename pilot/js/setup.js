@@ -80,7 +80,7 @@ function setupGame() {
     ]
   }
   // set estimated study time in mins
-  const time = '10';
+  const time = '5';
 
   /* ---------------------------------------------------------
     INSTRUCTIONS
@@ -94,7 +94,7 @@ function setupGame() {
       </div>
       <div>
         <p>In this experiment, your task is to evaluate two farmers as they harvest berries from a farm.</p>
-        <p>We expect the experiment to take approximately <b>ten minutes</b> to complete, including the time it takes to read these instructions.</p>
+        <p>We expect the experiment to take approximately <b>five minutes</b> to complete, including the time it takes to read these instructions.</p>
         <p>Click <b>Get Started</b> to begin.</p>
       </div>`,
     choices: ['Get Started'],
@@ -379,22 +379,22 @@ function setupGame() {
   const dvQuestionConfigs = [
     {
       name: 'agreement',
-      prompt: `To what extent do you think ${yellow_text} and ${purple_text} had an unspoken agreement to harvest the center tree together?`,
+      prompt: `To what extent do you think ${yellow_text} and ${purple_text} had <strong>an unspoken agreement</strong> to harvest the center tree together?`,
       labels: ['Not at all', 'Very much']
     },
     {
       name: 'commitment',
-      prompt: `To what extent was ${purple_text} and ${yellow_text} committed to harvesting the center tree together?`,
+      prompt: `To what extent was ${purple_text} and ${yellow_text} <strong>committed</strong> to harvesting the center tree together?`,
       labels: ['Not at all', 'Very much']
     },
     {
       name: 'anger',
-      prompt: `How angry would ${yellow_text} feel that ${purple_text} went to a different tree?`,
+      prompt: `How <strong>angry</strong> would ${yellow_text} feel that ${purple_text} went to a different tree?`,
       labels: ['Not at all angry', 'Very angry']
     },
     {
       name: 'guilt',
-      prompt: `How guilty would ${purple_text} feel about going to a different tree?`,
+      prompt: `How <strong>guilty</strong> would ${purple_text} feel about going to a different tree?`,
       labels: ['Not at all guilty', 'Very guilty']
     }
   ];
