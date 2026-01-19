@@ -408,7 +408,7 @@ function setupGame() {
       max: 100,
       start: 50,
       slider_width: 500,
-      require_movement: false,
+      require_movement: true,
       button_label: 'Continue',
       data: {
         task: 'dv_question',
@@ -569,7 +569,8 @@ function setupGame() {
       trial_type: trialData.trial_type,
       response: trialData.response ?? null,
       rt: trialData.rt ?? null,
-      dv_name: trialData.data.dv_name ?? null
+      task: trialData.task ?? null,
+      dv_name: trialData.dv_name ?? null,
     }));
 
     // Combine session meta and trial data
@@ -577,6 +578,7 @@ function setupGame() {
       sessionMeta,
       trials: trialData
     };
+    console.log('Data to save:', dataToSave);
 
     return JSON.stringify(dataToSave);  
 
