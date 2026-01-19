@@ -378,11 +378,6 @@ function setupGame() {
   // DV Questions - one per page using standard jsPsych slider
   const dvQuestionConfigs = [
     {
-      name: 'counterfactual',
-      prompt: `If ${purple_text} couldn't come to the farm to harvest the next plot without telling ${yellow_text}, how likely is ${yellow_text} to go to the center tree?`,
-      labels: ['Very unlikely', 'Very likely']
-    },
-    {
       name: 'agreement',
       prompt: `To what extent do you think ${yellow_text} and ${purple_text} had an unspoken agreement to harvest the center tree together?`,
       labels: ['Not at all', 'Very much']
