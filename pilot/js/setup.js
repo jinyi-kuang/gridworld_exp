@@ -565,6 +565,7 @@ function setupGame() {
         trial_index: trialData.trial_index,
         trial_type: trialData.trial_type,
         response: trialData.response,
+        dv_name: trialData.dv_name,  
         ...sessionMeta
       }));
 
