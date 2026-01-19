@@ -598,7 +598,7 @@ function setupGame() {
       window.onbeforeunload = null;
 
       //change this to prolific url
-      var completion_url = "https://github.com/jinyi-kuang/gridworld_exp"
+      var completion_url = "https://app.prolific.com/submissions/complete?cc=C1OZN55Q"
 
       window.open(completion_url, "_self")
     }
