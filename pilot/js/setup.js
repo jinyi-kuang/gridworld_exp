@@ -281,16 +281,17 @@ function setupGame() {
     );
   } else {
     // Independent: test understanding that all trees give same reward
+
     compQ1 = makeCompQuestion(
-      "1. How many berries does a farmer get from the center tree?",
-      ["1 berry", "5 berries", "8 berries"],
-      "5 berries"
+      "1. How many berries does each farmer get if BOTH go to the center tree together?",
+      ["1 berry each", "5 berries each", "8 berries each"],
+      "8 berries each"
     );
 
     compQ2 = makeCompQuestion(
-      "2. How many berries does a farmer get from a corner tree?",
+      "2. How many berries does a farmer get if they go to the center tree ALONE?",
       ["1 berry", "5 berries", "8 berries"],
-      "5 berries"
+      "8 berries"
     );
 
     compQ3 = makeCompQuestion(

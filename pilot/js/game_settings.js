@@ -36,8 +36,8 @@ gs = {
         corner: 5
       },
       independent: {
-        center_solo: 5,
-        center_joint: 5,
+        center_solo: 8,
+        center_joint: 8,
         corner: 5
       }
     },
@@ -46,12 +46,12 @@ gs = {
       size_multiplier: 1.4
     },
     corner_trees: [
-      { position: [2, 2] },
-      { position: [9, 9] }
+      { position: [2,9] },
+      { position: [9, 2] }
     ],
     critical_trial: {
       yellow_target: [5, 5],  // center
-      purple_target: [9, 9]   // corner
+      purple_target: [9, 2]   // corner
     }
   },
   dv_questions: {
