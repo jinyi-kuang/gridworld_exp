@@ -42,7 +42,7 @@ gs = {
       }
     },
     center_tree: {
-      position: [5, 5],
+      position: [6, 5],
       size_multiplier: 1.4
     },
     corner_trees: [
@@ -50,7 +50,7 @@ gs = {
       { position: [9, 2] }
     ],
     critical_trial: {
-      yellow_target: [5, 5],  // center
+      yellow_target: [6, 5],  // center
       purple_target: [9, 2]   // corner
     }
   },

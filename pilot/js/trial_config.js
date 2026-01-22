@@ -125,7 +125,7 @@ const testTrials = [
     cols: 10,
     agent_types: ["optimist", "pessimist"],
     agent_start_positions: [[1, 1], [10, 10]],
-    tree_positions: [[5, 5], [2, 9], [9, 2]],
+    tree_positions: [[6, 5], [2, 9], [9, 2]],
     tree_configs: [
       { isCenter: true, solo_reward: 1, joint_reward: 8 },
       { isCenter: false, solo_reward: 5, joint_reward: 5 },
@@ -134,6 +134,6 @@ const testTrials = [
     tree_rewards: [[8, 8], [5, 5], [5, 5]],
     tree_visibility: [1, 1, 1],
     total_steps: 10,
-    target_tree_positions: [[5, 5], [5, 5]],
+    target_tree_positions: [[6, 5], [6, 5]],
   }
 ];
