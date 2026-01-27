@@ -1,1 +1,1 @@
-https://jinyi-kuang.github.io/gridworld_exp/pilot/index.html
+https://jinyi-kuang.github.io/gridworld_exp/Exp2/index.html
