@@ -1,0 +1,12 @@
+{
+    "name": "new_1",
+    "rows": 10,
+    "cols": 10,
+    "agent_type": ["optimist", "pessimist"],
+    "agent_start_position": [[1, 5], [5, 2]],
+    "tree_positions": [[8, 7], [2, 9], [9, 4], [10, 2], [5, 6]],
+    "tree_rewards": [5, 5, 5, 5, 5],
+    "tree_visibility": [1, 1, 1, 1, 1],
+    "condition": 0,
+    "joint_tree_position": [10, 2]
+}
