@@ -161,22 +161,22 @@ function setupGame() {
   const isInterdependent = gs.session_info.payoff_condition === 'interdependent';
   const payoffs = gs.experiment.payoff_conditions[gs.session_info.payoff_condition];
 
-  // Center tree instruction varies by payoff condition
-  const centerTreeInstruction = isInterdependent
-    ? `<p><strong>Important:</strong> The <em>large tree in the center</em> has the most berries,
-       but it requires <strong>both farmers working together</strong> to harvest fully. The branches
-       are too high for one farmer to reach alone.</p>
-       <p>When both farmers go to the center tree together, they each get <strong>${payoffs.center_joint} berries</strong>.</p>
-       <p>If only one farmer goes to the center tree alone, they can only reach <strong>${payoffs.center_solo} berry</strong>.</p>`
-    : `<p>All trees yield the same number of berries.</p>
-       <p>The <em>center tree</em> and the <em>corner trees</em> each give <strong>${payoffs.center_solo} berries</strong> per farmer,
-       whether they harvest together or alone.</p>`;
+  const taskPayoffInstruction = isInterdependent
+  ? `<p>This means, if each farmer goes to the tree closer to them seperately, they will harvest <strong>5 berries</strong>.</p>
 
-  // Corner tree instruction varies by payoff condition
-  const cornerTreeInstruction = isInterdependent
-    ? `<p>The <em>smaller trees in the corners</em> can be harvested by one farmer alone.</p>
-       <p>A farmer who goes to a corner tree will get <strong>${payoffs.corner} berries</strong>.</p>`
-    : `<p>The <em>smaller trees in the corners</em> also give <strong>${payoffs.corner} berries</strong> per farmer.</p>`;
+     <p>If each farmer goes to the farther tree seperately, they will harvest <strong>8 berries</strong>.</p>
+
+     <p>However, if they harvest the same tree, the one who travels close will still receive <strong>5</strong> berries but the one who travels far and arrived later will only left with <strong>1 berry</strong> to harvest.</p>
+
+     <p><strong>The number of berries each farmer will get will depend on both which tree they harvest and which tree the other farmer choose to harvest.</strong></p>
+    `
+     
+  : `<p>This means, if each farmer goes to the tree closer to them seperately, they will harvest <strong>5 berries</strong>.</p>
+
+     <p>If each farmer goes to the farther tree seperately, they will harvest <strong>8 berries</strong>.</p>
+     
+     <p><strong>Each farmer always gets the same berries regardless of where the other goes.</strong></p>
+  `;
 
   var taskInstructionsHTML = [
     `<p>Imagine you are observing two farmers, ${yellow_text} and ${purple_text},
@@ -185,16 +185,20 @@ function setupGame() {
      and then answer some questions about what you observed.</p>`,
 
     `<p>The farm is a <em>10</em> squares wide and <em>10</em> squares tall grid, just like this:</p>
-   <img height="500" src="assets/image/gridworld.png">
-   <p>There are <em>berry trees</em> located on the farm.</p>`,
+    <img height="500" src="assets/image/gridworld.png">
+    <p>There are <em>berry trees</em> located on the farm.</p>`,
 
     `<p>Each tree produces two types of berries: yellow berries and purple berries.</p>
-   <p>${yellow_text} only harvests yellow berries, while ${purple_text} only harvests purple berries.</p>
-   <img height="500" src="assets/image/harvest.png">`,
+    <p>${yellow_text} only harvests yellow berries, while ${purple_text} only harvests purple berries.</p>
+    <img height="500" src="assets/image/harvest.png">`,
 
-    centerTreeInstruction,
+    `<p>There are <strong>two berry trees</strong> on the farm.</p>
+    <p>One tree is closer to ${yellow_text}, and the other is closer to ${purple_text}.</p>
+     <p>The tree closer to ${yellow_text} yields <strong>5 yellow berries</strong> but <strong>8 purple berries</strong>.</p>
+     <p>The tree closer to ${purple_text} yields <strong>8 yellow berries</strong> but <strong>5 purple berries</strong>.</p>
+     <img height="500" src="assets/image/gridworld.png">`,
 
-    cornerTreeInstruction,
+    taskPayoffInstruction,
 
     `<p>You will observe ${yellow_text} and ${purple_text} harvest berries over
     <strong>${numCoordinationRounds + 1} rounds</strong>.</p>
@@ -261,45 +265,74 @@ function setupGame() {
   var compQ1, compQ2, compQ3;
 
   if (isInterdependent) {
-    // Interdependent: test understanding of coordination requirement
-    compQ1 = makeCompQuestion(
-      "1. How many berries does each farmer get if BOTH go to the center tree together?",
-      ["1 berry each", "5 berries each", "8 berries each"],
+
+  // Interdependent condition
+
+  compQ1 = makeCompQuestion(
+    "1. How many berries does each farmer get if BOTH travel to the farther tree?",
+    [
+      "1 berry each",
+      "5 berries each",
       "8 berries each"
-    );
+    ],
+    "8 berries each"
+  );
 
-    compQ2 = makeCompQuestion(
-      "2. How many berries does a farmer get if they go to the center tree ALONE?",
-      ["1 berry", "5 berries", "8 berries"],
-      "1 berry"
-    );
-
-    compQ3 = makeCompQuestion(
-      "3. How many berries does a farmer get from a corner tree?",
-      ["1 berry", "5 berries", "8 berries"],
-      "5 berries"
-    );
-  } else {
-    // Independent: test understanding that all trees give same reward
-
-    compQ1 = makeCompQuestion(
-      "1. How many berries does each farmer get if BOTH go to the center tree together?",
-      ["1 berry each", "5 berries each", "8 berries each"],
-      "8 berries each"
-    );
-
-    compQ2 = makeCompQuestion(
-      "2. How many berries does a farmer get if they go to the center tree ALONE?",
-      ["1 berry", "5 berries", "8 berries"],
+  compQ2 = makeCompQuestion(
+    "2. How many berries does Yellow get if Yellow travels far but Purple stays close?",
+    [
+      "1 berry",
+      "5 berries",
       "8 berries"
-    );
+    ],
+    "1 berry"
+  );
 
-    compQ3 = makeCompQuestion(
-      "3. Does the number of berries change if both farmers go to the same tree?",
-      ["Yes, they get more berries", "Yes, they get fewer berries", "No, they each get the same amount"],
-      "No, they each get the same amount"
-    );
-  }
+  compQ3 = makeCompQuestion(
+    "3. How many berries does a farmer get if they go to the tree closer to them?",
+    [
+      "1 berry",
+      "5 berries",
+      "8 berries"
+    ],
+    "5 berries"
+  );
+
+} else {
+
+  // Independent condition
+
+  compQ1 = makeCompQuestion(
+    "1. How many berries does each farmer get if BOTH travel to the farther tree?",
+    [
+      "1 berry each",
+      "5 berries each",
+      "8 berries each"
+    ],
+    "8 berries each"
+  );
+
+  compQ2 = makeCompQuestion(
+    "2. How many berries does a farmer get if they go to the tree closer to them?",
+    [
+      "1 berry",
+      "5 berries",
+      "8 berries"
+    ],
+    "5 berries"
+  );
+
+  compQ3 = makeCompQuestion(
+    "3. How many berries does Yellow get if Yellow travels far and Purple stays close?",
+    [
+      "1 berry",
+      "5 berries",
+      "8 berries"
+    ],
+    "8 berries"
+  );
+}
+
 
   var comprehensionConclusion = {
     type: jsPsychHtmlButtonResponse,
@@ -368,7 +401,7 @@ function setupGame() {
     type: jsPsychHtmlButtonResponse,
     stimulus: `
       <p>You've finished observing ${yellow_text} and ${purple_text}!</p>
-      <p>In that last round, ${purple_text} went to a <strong>different tree</strong> than ${yellow_text}.</p>
+      <p>In that last round, ${purple_text} went to a <strong>closer tree</strong>.</p>
       <p>Now we'd like to ask you some questions about what you observed.</p>
     `,
     choices: ['Continue to Questions'],
@@ -380,22 +413,22 @@ function setupGame() {
   const dvQuestionConfigs = [
     {
       name: 'agreement',
-      prompt: `To what extent do you think ${yellow_text} and ${purple_text} had <strong>an unspoken agreement</strong> to harvest the center tree together?`,
+      prompt: `To what extent do you think ${yellow_text} and ${purple_text} had <strong>an unspoken agreement</strong> to each travel to the farther tree?`,
       labels: ['Not at all', 'Very much']
     },
     {
       name: 'commitment',
-      prompt: `To what extent was ${purple_text} and ${yellow_text} <strong>committed</strong> to harvesting the center tree together?`,
+      prompt: `To what extent was ${purple_text} and ${yellow_text} <strong>committed</strong> to each traveling to the farther tree?`,
       labels: ['Not at all', 'Very much']
     },
     {
       name: 'anger',
-      prompt: `How <strong>angry</strong> would ${yellow_text} feel that ${purple_text} went to a different tree?`,
+      prompt: `How <strong>angry</strong> would ${yellow_text} feel that ${purple_text} went to the closer tree?`,
       labels: ['Not at all angry', 'Very angry']
     },
     {
       name: 'guilt',
-      prompt: `How <strong>guilty</strong> would ${purple_text} feel about going to a different tree?`,
+      prompt: `How <strong>guilty</strong> would ${purple_text} feel about going to the closer tree?`,
       labels: ['Not at all guilty', 'Very guilty']
     }
   ];

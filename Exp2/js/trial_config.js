@@ -1,139 +1,140 @@
-
-// Trial configuration for joint commitment experiment
-// Generates trials dynamically based on repetition and payoff conditions
-
 /**
- * Generate coordination trials where both agents go to center tree
- * @param {number} numRounds - Number of coordination rounds (2 or 6)
- * @param {Object} payoffs - Payoff structure { center_solo, center_joint, corner }
- * @returns {Array} Array of trial configurations
- */
-function generateCoordinationTrials(numRounds, payoffs) {
+ * Generate coordination trials where optimal outcome requires agents to go to "opposite" tree
+ * @param {number} numRounds - 2 or 6
+ * @param {boolean} dependency - whether Purple's choice affects Yellow
+ * @returns {Array} Trials
+ * */
+
+
+ 
+function generateCoordinationTrials(numRounds) {
+
   const trials = [];
-  const centerPos = gs.experiment.center_tree.position;
+
+const trees = [
+  {
+    position: [3, 3],
+    reward_yellow: 5,
+    reward_purple: 8
+  },
+  {
+    position: [8, 8],
+    reward_yellow: 8,
+    reward_purple: 5
+  }
+];
+
+  if (!trees || trees.length !== 2) {
+    throw new Error("Expected exactly 2 trees");
+  }
+
+  const tree_positions = trees.map(t => t.position);
+
+  const tree_rewards = trees.map(t => ([
+    t.reward_yellow,   // agent 0
+    t.reward_purple    // agent 1
+  ]));
 
   for (let i = 0; i < numRounds; i++) {
+
     trials.push({
+
       trial_number: i + 1,
       trial_type: "coordination",
       name: `coordination_${i + 1}`,
+
       rows: 10,
       cols: 10,
+
       agent_types: ["optimist", "pessimist"],
-      agent_start_positions: [[1, 1], [10, 10]],
-      tree_positions: [
-        gs.experiment.center_tree.position,
-        ...gs.experiment.corner_trees.map(t => t.position)
+
+      agent_start_positions: [
+        [1, 1],    // Yellow
+        [10, 10]   // Purple
       ],
-      tree_configs: [
-        {
-          isCenter: true,
-          solo_reward: payoffs.center_solo,
-          joint_reward: payoffs.center_joint
-        },
-        ...gs.experiment.corner_trees.map(t => ({
-          isCenter: false,
-          solo_reward: payoffs.corner,
-          joint_reward: payoffs.corner
-        }))
-      ],
-      // Legacy format for compatibility - will be overridden by new logic
-      tree_rewards: [
-        [payoffs.center_joint, payoffs.center_joint],
-        ...gs.experiment.corner_trees.map(t => [payoffs.corner, payoffs.corner])
-      ],
-      tree_visibility: [1, 1, 1],
+
+      tree_positions: tree_positions,
+
+      tree_rewards: tree_rewards,
+
+      tree_visibility: [1, 1],
+
       total_steps: 10,
-      // Both agents go to center
-      target_tree_positions: [centerPos, centerPos],
+
+      // Both travel far (coordination)
+      target_tree_positions: [
+        trees[1].position,
+        trees[0].position
+      ]
     });
   }
 
   return trials;
 }
 
-/**
- * Generate the critical trial where Purple deviates to corner
- * @param {number} trialNumber - The trial number (after coordination rounds)
- * @param {Object} payoffs - Payoff structure { center_solo, center_joint, corner }
- * @returns {Object} Critical trial configuration
- */
-function generateCriticalTrial(trialNumber, payoffs) {
+
+function generateCriticalTrial(trialNumber,dependency) {
+console.log("Generating critical trial with dependency:", dependency);
+  const rewardValue = (dependency === "interdependent") ? 1 : 8;
+  const trees = [
+  {
+    position: [3, 3],
+    reward_yellow: 5,
+    reward_purple: rewardValue
+  },
+  {
+    position: [8, 8],
+    reward_yellow: rewardValue,
+    reward_purple: 5
+  }
+];
+
+const tree_positions = trees.map(t => t.position);
+
+  const tree_rewards = trees.map(t => ([
+    t.reward_yellow,   // agent 0
+    t.reward_purple    // agent 1
+  ]));
+
   return {
     trial_number: trialNumber,
     trial_type: "critical",
     name: "critical_trial",
+
     rows: 10,
     cols: 10,
+
     agent_types: ["optimist", "pessimist"],
-    agent_start_positions: [[1, 1], [10, 10]],
-    tree_positions: [
-      gs.experiment.center_tree.position,
-      ...gs.experiment.corner_trees.map(t => t.position)
+
+    agent_start_positions: [
+      [1, 1],
+      [10, 10]
     ],
-    tree_configs: [
-      {
-        isCenter: true,
-        solo_reward: payoffs.center_solo,
-        joint_reward: payoffs.center_joint
-      },
-      ...gs.experiment.corner_trees.map(t => ({
-        isCenter: false,
-        solo_reward: payoffs.corner,
-        joint_reward: payoffs.corner
-      }))
-    ],
-    tree_rewards: [
-      // Show joint reward for both initially - actual payout determined after movement
-      [payoffs.center_joint, payoffs.center_joint],
-      ...gs.experiment.corner_trees.map(t => [payoffs.corner, payoffs.corner])
-    ],
-    tree_visibility: [1, 1, 1],
+
+    tree_positions: tree_positions,
+    tree_rewards: tree_rewards,
+    tree_visibility: [1, 1],
     total_steps: 10,
-    // Yellow goes to center (alone), Purple deviates to corner
+
+    // Purple defects to near tree
     target_tree_positions: [
-      gs.experiment.critical_trial.yellow_target,
-      gs.experiment.critical_trial.purple_target
-    ],
+      trees[1].position,  // Yellow goes far
+      trees[1].position   // Purple defects
+    ]
   };
 }
 
+
 /**
- * Generate all trials for the experiment based on conditions
- * @param {string} repetitionCondition - 'low' or 'high' repetition condition
- * @param {string} payoffCondition - 'interdependent' or 'independent' payoff condition
- * @returns {Array} All trial configurations
+ * Generate all trials for repetition & dependency condition
  */
 function generateAllTrials(repetitionCondition, payoffCondition) {
   const numRounds = gs.experiment.repetition_conditions[repetitionCondition] || 2;
-  const payoffs = gs.experiment.payoff_conditions[payoffCondition] || gs.experiment.payoff_conditions.interdependent;
+  const dependency = gs.experiment.payoff_conditions[payoffCondition] || gs.experiment.payoff_conditions.interdependent;
 
-  const coordinationTrials = generateCoordinationTrials(numRounds, payoffs);
-  const criticalTrial = generateCriticalTrial(numRounds + 1, payoffs);
+  const coordinationTrials = generateCoordinationTrials(numRounds, dependency);
+  const criticalTrial = generateCriticalTrial(numRounds + 1, dependency);
 
   return [...coordinationTrials, criticalTrial];
 }
 
-// Legacy export for backward compatibility during transition
-// This will be replaced by dynamic generation in setup.js
-const testTrials = [
-  {
-    trial_number: 1,
-    trial_type: "coordination",
-    name: "coordination_1",
-    rows: 10,
-    cols: 10,
-    agent_types: ["optimist", "pessimist"],
-    agent_start_positions: [[1, 1], [10, 10]],
-    tree_positions: [[6, 5], [2, 9], [9, 2]],
-    tree_configs: [
-      { isCenter: true, solo_reward: 1, joint_reward: 8 },
-      { isCenter: false, solo_reward: 5, joint_reward: 5 },
-      { isCenter: false, solo_reward: 5, joint_reward: 5 }
-    ],
-    tree_rewards: [[8, 8], [5, 5], [5, 5]],
-    tree_visibility: [1, 1, 1],
-    total_steps: 10,
-    target_tree_positions: [[6, 5], [6, 5]],
-  }
-];
