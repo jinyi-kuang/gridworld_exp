@@ -168,12 +168,17 @@ function setupGame() {
 
      <p>However, if they harvest the same tree, the one who travels close will still receive <strong>5</strong> berries but the one who travels far and arrived later will only left with <strong>1 berry</strong> to harvest.</p>
 
+     <img height="500" src="assets/image/gridworld-2trees.png">
+
      <p><strong>The number of berries each farmer will get will depend on both which tree they harvest and which tree the other farmer choose to harvest.</strong></p>
     `
      
   : `<p>This means, if each farmer goes to the tree closer to them seperately, they will harvest <strong>5 berries</strong>.</p>
 
      <p>If each farmer goes to the farther tree seperately, they will harvest <strong>8 berries</strong>.</p>
+
+     <img height="500" src="assets/image/gridworld-2trees.png
+     ">
      
      <p><strong>Each farmer always gets the same berries regardless of where the other goes.</strong></p>
   `;
@@ -181,11 +186,12 @@ function setupGame() {
   var taskInstructionsHTML = [
     `<p>Imagine you are observing two farmers, ${yellow_text} and ${purple_text},
      as they harvest berries from trees on a shared farm.</p>
+     <img height="500" src="assets/image/agent.png">
      <p>Your job is to watch how they work together over several rounds,
      and then answer some questions about what you observed.</p>`,
 
     `<p>The farm is a <em>10</em> squares wide and <em>10</em> squares tall grid, just like this:</p>
-    <img height="500" src="assets/image/gridworld.png">
+    <img height="500" src="assets/image/gridworld-empty.jpg">
     <p>There are <em>berry trees</em> located on the farm.</p>`,
 
     `<p>Each tree produces two types of berries: yellow berries and purple berries.</p>
@@ -196,7 +202,7 @@ function setupGame() {
     <p>One tree is closer to ${yellow_text}, and the other is closer to ${purple_text}.</p>
      <p>The tree closer to ${yellow_text} yields <strong>5 yellow berries</strong> but <strong>8 purple berries</strong>.</p>
      <p>The tree closer to ${purple_text} yields <strong>8 yellow berries</strong> but <strong>5 purple berries</strong>.</p>
-     <img height="500" src="assets/image/gridworld.png">`,
+     <img height="500" src="assets/image/gridworld-2trees.png">`,
 
     taskPayoffInstruction,
 

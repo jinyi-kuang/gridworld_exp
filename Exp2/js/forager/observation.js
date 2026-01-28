@@ -37,30 +37,34 @@ function areBothAgentsAtSameTree(gridworld) {
  * Determine berry reward for an agent based on coordination
  * @param {Tree} tree - The target tree
  * @param {string} agentType - 'optimist' or 'pessimist'
- * @param {boolean} isCoordinated - Whether both agents are at this tree
+ * @param {boolean} notCoordinated - Whether both agents are at this tree
  * @returns {number} Number of berries to harvest
  */
-function determineBerryReward(tree, agentType, isCoordinated) {
+function determineBerryReward(tree, agentType, notCoordinated) {
   if (!tree) return 0;
 
-  // If tree has interdependence config (center tree)
-  if (tree.isCenter) {
-    return isCoordinated ? tree.jointReward : tree.soloReward;
-  }
+  if (notCoordinated && tree.isCenter){
+    return agentType === 'optimist' ? 1:5
 
-  // Regular corner tree - always get full reward
-  return agentType === 'optimist' ? tree.optimistBerries.length : tree.pessimistBerries.length;
+  }
+  if (notCoordinated && !tree.isCenter){
+    return agentType === 'optimist' ? 8 : 5;
 }
+else{ 
+  return agentType === 'optimist' ? 8 : 8;
+}
+};
+
 
 /**
  * Perform harvest animation after both agents have arrived
  * @param {Gridworld} gridworld - The Gridworld instance
  */
 function performCoordinatedHarvest(gridworld) {
-  const isCoordinated = areBothAgentsAtSameTree(gridworld);
+  const notCoordinated = areBothAgentsAtSameTree(gridworld);
 
   console.log("Performing coordinated harvest:", {
-    isCoordinated,
+    notCoordinated,
     agent0Pos: agentArrivals.agent0.endPosition,
     agent1Pos: agentArrivals.agent1.endPosition
   });
@@ -72,10 +76,10 @@ function performCoordinatedHarvest(gridworld) {
     const agentType = idx === 0 ? 'optimist' : 'pessimist';
 
     if (tree) {
-      const berryCount = determineBerryReward(tree, agentType, isCoordinated);
+      const berryCount = determineBerryReward(tree, agentType, notCoordinated);
 
       // Use partial harvest animation for solo center tree attempt
-      if (tree.isCenter && !isCoordinated) {
+      if (notCoordinated) {
         tree.partialHarvest(agentType, berryCount, () => {
           gridworld.inObservation = false;
           gridworld.collectBerries(berryCount, agentType);
