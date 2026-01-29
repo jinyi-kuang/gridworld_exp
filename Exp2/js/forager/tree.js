@@ -21,9 +21,9 @@ class Tree {
 
     // New: Center tree properties for interdependence
     // Only true if treeConfig marks it as center AND payoff condition is interdependent
-    this.isCenter = treeConfig?.isCenter && gs.session_info.payoff_condition === "interdependent";
-    this.soloReward = treeConfig?.solo_reward || (Array.isArray(reward) ? reward[0] : reward);
-    this.jointReward = treeConfig?.joint_reward || (Array.isArray(reward) ? reward[0] : reward);
+    // this.isCenter = treeConfig?.isCenter && gs.session_info.payoff_condition === "interdependent";
+    // this.soloReward = treeConfig?.solo_reward || (Array.isArray(reward) ? reward[0] : reward);
+    this.jointRewards = treeConfig?.joint_rewards || (Array.isArray(reward) ? reward[0] : reward);
     this.sizeMultiplier = this.isCenter ? (gs.experiment?.center_tree?.size_multiplier || 1.4) : 1.0;
 
     // Tree and berry colors

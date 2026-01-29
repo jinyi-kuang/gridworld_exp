@@ -159,7 +159,7 @@ function setupGame() {
 
   // Define task instructions language based on payoff condition
   const isInterdependent = gs.session_info.payoff_condition === 'interdependent';
-  const payoffs = gs.experiment.payoff_conditions[gs.session_info.payoff_condition];
+  // const payoffs = gs.experiment.payoff_conditions[gs.session_info.payoff_condition];
 
   const taskPayoffInstruction = isInterdependent
   ? `<p>This means, if each farmer goes to the tree closer to them seperately, they will harvest <strong>5 berries</strong>.</p>
@@ -172,14 +172,14 @@ function setupGame() {
 
      <p><strong>The number of berries each farmer will get will depend on both which tree they harvest and which tree the other farmer choose to harvest.</strong></p>
     `
-     
+
   : `<p>This means, if each farmer goes to the tree closer to them seperately, they will harvest <strong>5 berries</strong>.</p>
 
      <p>If each farmer goes to the farther tree seperately, they will harvest <strong>8 berries</strong>.</p>
 
      <img height="500" src="assets/image/gridworld-2trees.png
      ">
-     
+
      <p><strong>Each farmer always gets the same berries regardless of where the other goes.</strong></p>
   `;
 
@@ -620,7 +620,7 @@ function setupGame() {
     };
     console.log('Data to save:', dataToSave);
 
-    return JSON.stringify(dataToSave);  
+    return JSON.stringify(dataToSave);
 
     }
   };

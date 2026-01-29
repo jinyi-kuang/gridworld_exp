@@ -6,8 +6,8 @@
  * */
 
 
- 
-function generateCoordinationTrials(numRounds) {
+
+function generateCoordinationTrials(numRounds, payoffCondition) {
 
   const trials = [];
 
@@ -54,7 +54,17 @@ const trees = [
       ],
 
       tree_positions: tree_positions,
-
+      tree_configs: [
+        {
+          isCenter: false,
+          joint_rewards: payoffCondition === "interdependent" ? [5, 1] : [5, 8]
+        },
+        {
+          isCenter: false,
+          joint_rewards: payoffCondition === "interdependent" ? [1, 5] : [8, 5]
+        },
+      ],
+      // joint_rewards: dependency === "interdependent" ? [1, 5] : [8, 5],
       tree_rewards: tree_rewards,
 
       tree_visibility: [1, 1],
@@ -73,18 +83,17 @@ const trees = [
 }
 
 
-function generateCriticalTrial(trialNumber,dependency) {
-console.log("Generating critical trial with dependency:", dependency);
-  const rewardValue = (dependency === "interdependent") ? 1 : 8;
+function generateCriticalTrial(trialNumber, payoffCondition) {
+console.log("Generating critical trial with condition:", payoffCondition);
   const trees = [
   {
     position: [3, 3],
     reward_yellow: 5,
-    reward_purple: rewardValue
+    reward_purple: 8
   },
   {
     position: [8, 8],
-    reward_yellow: rewardValue,
+    reward_yellow: 8,
     reward_purple: 5
   }
 ];
@@ -112,6 +121,16 @@ const tree_positions = trees.map(t => t.position);
     ],
 
     tree_positions: tree_positions,
+    tree_configs: [
+      {
+        isCenter: false,
+        joint_rewards: payoffCondition === "interdependent" ? [5, 1] : [5, 8]
+      },
+      {
+        isCenter: false,
+        joint_rewards: payoffCondition === "interdependent" ? [1, 5] : [8, 5]
+      },
+    ],
     tree_rewards: tree_rewards,
     tree_visibility: [1, 1],
     total_steps: 10,
@@ -132,8 +151,8 @@ function generateAllTrials(repetitionCondition, payoffCondition) {
   const numRounds = gs.experiment.repetition_conditions[repetitionCondition] || 2;
   const dependency = gs.experiment.payoff_conditions[payoffCondition] || gs.experiment.payoff_conditions.interdependent;
 
-  const coordinationTrials = generateCoordinationTrials(numRounds, dependency);
-  const criticalTrial = generateCriticalTrial(numRounds + 1, dependency);
+  const coordinationTrials = generateCoordinationTrials(numRounds, payoffCondition);
+  const criticalTrial = generateCriticalTrial(numRounds + 1, payoffCondition);
 
   return [...coordinationTrials, criticalTrial];
 }

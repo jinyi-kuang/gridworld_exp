@@ -31,28 +31,16 @@ gs = {
     },
     payoff_conditions: {
       interdependent: {
-        center_solo: 1,
-        center_joint: 8,
-        corner: 5
+        far_solo: 8,
+        close_solo: 5,
+        far_joint: 1
       },
       independent: {
-        center_solo: 8,
-        center_joint: 8,
-        corner: 5
+        far_solo: 8,
+        close_solo: 5,
+        far_joint: 5
       }
     },
-    center_tree: {
-      position: [6, 5],
-      size_multiplier: 1.4
-    },
-    corner_trees: [
-      { position: [2,9] },
-      { position: [9, 2] }
-    ],
-    critical_trial: {
-      yellow_target: [6, 5],  // center
-      purple_target: [9, 2]   // corner
-    }
   },
   dv_questions: {
     counterfactual: "If Purple were sick tomorrow and couldn't come to the farm, how likely is Yellow to still go to the center tree?",

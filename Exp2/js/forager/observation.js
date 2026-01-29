@@ -41,18 +41,15 @@ function areBothAgentsAtSameTree(gridworld) {
  * @returns {number} Number of berries to harvest
  */
 function determineBerryReward(tree, agentType, notCoordinated) {
-  if (!tree) return 0;
-
-  if (notCoordinated && tree.isCenter){
-    return agentType === 'optimist' ? 1:5
-
+  if (!tree) {
+    console.log("No tree found");
+    return 0;
   }
-  if (notCoordinated && !tree.isCenter){
-    return agentType === 'optimist' ? 8 : 5;
-}
-else{ 
-  return agentType === 'optimist' ? 8 : 8;
-}
+  if (!notCoordinated){
+    return tree.reward[agentType === 'optimist' ? 0 : 1];
+  } else if (notCoordinated){
+    return tree.jointRewards[agentType === 'optimist' ? 0 : 1];
+  }
 };
 
 
@@ -77,9 +74,11 @@ function performCoordinatedHarvest(gridworld) {
 
     if (tree) {
       const berryCount = determineBerryReward(tree, agentType, notCoordinated);
+      console.log("Berry count:", berryCount);
 
       // Use partial harvest animation for solo center tree attempt
       if (notCoordinated) {
+        console.log("Performing partial harvest: ", agentType, berryCount);
         tree.partialHarvest(agentType, berryCount, () => {
           gridworld.inObservation = false;
           gridworld.collectBerries(berryCount, agentType);
