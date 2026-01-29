@@ -435,6 +435,11 @@ function setupGame() {
       name: 'guilt',
       prompt: `How <strong>guilty</strong> would ${purple_text} feel about going to the closer tree?`,
       labels: ['Not at all guilty', 'Very guilty']
+    },
+    {
+      name: 'attention',
+      prompt: `How <strong>strongly</strong> would you feel about completing this study? Please drag the bar to 100 (the far right) to pass the attention check.`,
+      labels: ['Not at all', 'Very much']
     }
   ];
 
