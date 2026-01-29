@@ -168,19 +168,18 @@ function setupGame() {
 
      <p>However, if they harvest the same tree, the one who travels close will still receive <strong>5</strong> berries but the one who travels far and arrived later will only left with <strong>1 berry</strong> to harvest.</p>
 
-     <img height="500" src="assets/image/gridworld-2trees.png">
-
      <p><strong>The number of berries each farmer will get will depend on both which tree they harvest and which tree the other farmer choose to harvest.</strong></p>
-    `
+     
+     <img height="500" src="assets/image/gridworld-2trees.png">
+     `
 
   : `<p>This means, if each farmer goes to the tree closer to them seperately, they will harvest <strong>5 berries</strong>.</p>
 
      <p>If each farmer goes to the farther tree seperately, they will harvest <strong>8 berries</strong>.</p>
 
-     <img height="500" src="assets/image/gridworld-2trees.png
-     ">
-
      <p><strong>Each farmer always gets the same berries regardless of where the other goes.</strong></p>
+
+     <img height="500" src="assets/image/gridworld-2trees.png">
   `;
 
   var taskInstructionsHTML = [
@@ -208,7 +207,7 @@ function setupGame() {
 
     `<p>You will observe ${yellow_text} and ${purple_text} harvest berries over
     <strong>${numCoordinationRounds + 1} rounds</strong>.</p>
-    <p>Watch carefully how they coordinate (or don't) at each tree!</p>`,
+    <p>Watch carefully which tree they choose to harvest!</p>`,
 
     `<p>After observing the farmers, you will answer some questions about what you saw
     and what you think about their behavior.</p>`,

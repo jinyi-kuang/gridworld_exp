@@ -13,12 +13,12 @@ function generateCoordinationTrials(numRounds, payoffCondition) {
 
 const trees = [
   {
-    position: [3, 3],
+    position: [3, 5],
     reward_yellow: 5,
     reward_purple: 8
   },
   {
-    position: [8, 8],
+    position: [8, 6],
     reward_yellow: 8,
     reward_purple: 5
   }
@@ -87,12 +87,12 @@ function generateCriticalTrial(trialNumber, payoffCondition) {
 console.log("Generating critical trial with condition:", payoffCondition);
   const trees = [
   {
-    position: [3, 3],
+    position: [3, 5],
     reward_yellow: 5,
     reward_purple: 8
   },
   {
-    position: [8, 8],
+    position: [8, 6],
     reward_yellow: 8,
     reward_purple: 5
   }
