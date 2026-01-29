@@ -186,7 +186,7 @@ function setupGame() {
   var taskInstructionsHTML = [
     `<p>Imagine you are observing two farmers, ${yellow_text} and ${purple_text},
      as they harvest berries from trees on a shared farm.</p>
-     <img height="500" src="assets/image/agent.png">
+     <img height="200" src="assets/image/agent.png">
      <p>Your job is to watch how they work together over several rounds,
      and then answer some questions about what you observed.</p>`,
 
