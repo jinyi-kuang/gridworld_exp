@@ -1,0 +1,662 @@
+---
+title: "3-model comparison"
+format:
+    html:
+      toc-title: Table of contents
+      toc: true
+      toc-depth: 2
+      code-fold: true # allow code folding
+      number-sections: true
+      highlight-style: github
+      toc-location: body
+      cap-location: top
+      page-layout: full
+      embed-resources: true
+      self-contained-math: true
+      toc-expand: true
+      theme: cosmo
+execute:
+  echo: false        # show R code
+  warning: false    # hide warnings
+  message: false    # hide messages
+  eval: true        # run the code
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F)
+library(tidyverse)
+library(brms)
+library(ggpubr)
+library(ggtext)
+set.seed(999)
+red <- "#D52A2A" 
+blue <- "#1F77B4" 
+```
+
+## prep data
+```{r}
+exp1<-read.csv("data/exp1.csv") %>% select(-X)
+exp2<-read.csv("data/exp2.csv") %>% select(-X)
+all<- rbind(exp1,exp2)
+```
+
+```{r}
+df_model <- all %>%
+  transmute(
+    id,
+    y=agreement,
+    T = ifelse(repetition_condition %in% c("low","T=2",2), 2, 6),
+    interdep = ifelse(interdependency %in% c("interdependent","Interdependent"), 1, 0),
+    together_obs = ifelse(Experiment %in% c("Experiment 1","1",1), 1, 0)
+  )
+```
+
+# model prediction 
+
+## model specification
+
+```{r}
+# --- 1. MODEL CONSTANTS & GRID ---
+RH <- 8
+RM <- 5
+RL <- 1
+epsilon<-0.01
+p=0.5
+sigma=20
+
+# Grid for Theta integration (0 to 1)
+theta_grid <- seq(0, 1, length.out = 100)
+d_theta <- 1 / length(theta_grid)
+
+# --- 2. HELPER FUNCTIONS ---
+
+# A. Social Reasoning Likelihood (CORRECTED)
+get_social_lik <- function(beta, interdep_condition) {
+  # Input: interdep_condition is a vector of 0s and 1s (length N)
+  
+  # 1. Calculate Expected Utilities 
+  
+  # Individual Perspective (I) - Vector of length N
+  # If Interdependent (1): Risk exists. EU = p*RH + (1-p)*RL
+  # If Independent (0): No risk. EU = RH
+  U_coord_I <- ifelse(interdep_condition == 1, 
+                      p * RH + (1 - p) * RL, 
+                      RH)
+  U_defect_I <- RM
+  dU_I_vec <- U_coord_I - U_defect_I # Vector length N
+  
+  # Collective Perspective (We) - Scalar
+  U_coord_We <- RH
+  U_defect_We <- RM
+  dU_We_scalar <- U_coord_We - U_defect_We
+  dU_We_vec <- rep(dU_We_scalar, length(dU_I_vec))
+  
+  # 2. Utilities based on Theta (Eq. 1)
+  
+  # Result: Matrix [N rows x M thetas]
+  dU_theta <- outer(dU_I_vec, (1 - theta_grid)) + outer(dU_We_vec, theta_grid)
+  
+  # 3. Softmax Choice Probability (Eq. 2)
+  
+  # P(coord | theta)
+  P_coord <- 1 / (1 + exp(-beta * dU_theta))
+  
+  return(P_coord)
+}
+
+# B. Heuristic Likelihood (Eq. 4)
+get_heuristic_lik <- function(lambda, is_together) {
+  # Input: is_together is TRUE (1) for Exp 1, FALSE (0) for Exp 2
+  # Calculate P(together | theta)
+  prob_together <- lambda * (theta_grid + (1 - theta_grid) * epsilon) + (1 - lambda) * 0.5
+  
+  # Create a matrix where rows are trials and cols are theta_grid
+  # If observed 'together' (is_together=1), use prob_together. 
+  # If not (is_together=0), use 1.0 (uninformative).
+  lik_mat <- matrix(rep(prob_together, length(is_together)), 
+                    nrow = length(is_together), byrow = TRUE)
+  
+  # Apply mask: neutral likelihood (1.0) for 'Separate' condition
+  #lik_mat[is_together == 0, ] <- 1.0-lik_mat[is_together == 0, ]
+  lik_mat[is_together == 0, ] <- 1.0
+  
+  return(lik_mat)
+}
+
+# --- 3. MAIN PREDICTION FUNCTION ---
+
+predict_model <- function(params, df) {
+  # Unpack parameters
+  beta   <- exp(params[1])   # Inverse Temp (>0)
+  lambda <- plogis(params[2])# Heuristic Weight (0-1)
+  
+  # 1. Get Social Likelihoods (Vectorized)
+  # Returns matrix [N_trials x N_thetas]
+  lik_social <- get_social_lik(beta, df$interdep) 
+  if(!is.matrix(lik_social)) lik_soc <- matrix(lik_social, nrow=nrow(df))
+  
+  # 2. Get Heuristic Likelihoods
+  lik_heuristic <- get_heuristic_lik(lambda, df$together_obs)
+  if(!is.matrix(lik_heuristic)) lik_heuristic <- matrix(lik_heuristic, nrow=nrow(df))
+  
+  # 3. Compute Posterior 
+  # P(theta | T) ~ P(coord)^T * P(together)^T * Prior
+  # Note: df$T contains the repetition count (e.g., 2 or 6)
+  
+  # Raise likelihoods to the power of T rounds
+  lik_social_T <- lik_social ^ df$T
+  lik_heuristic_T <- lik_heuristic ^ df$T
+  
+  # Assume Uniform Prior P(theta) = 1
+  posterior_unnorm <- lik_social_T * lik_heuristic_T
+  
+  # Normalize
+  evidence <- rowSums(posterior_unnorm * d_theta)
+  evidence[evidence == 0] <- 1e-10
+  posterior <- posterior_unnorm / evidence
+  
+  # 4. Compute Expectation E[theta]
+  expected_theta <- rowSums(posterior * matrix(rep(theta_grid, nrow(df)), nrow=nrow(df), byrow=TRUE) * d_theta)
+  
+  # 5. Scale to Human Rating (0-100)
+  prediction <- expected_theta * 100
+  
+  return(prediction)
+}
+
+# --- 4. OPTIMIZATION / FITTING ---
+
+# Negative Log Likelihood Function
+nll_func <- function(params, df) {
+  # 1. Generate predictions
+  preds <- predict_model(params, df)
+  
+  # 2. Calculate Log Likelihood of Data (Normal distribution)
+  log_lik <- dnorm(df$y, mean = preds, sd = sigma, log = TRUE)
+  
+  return(-sum(log_lik))
+}
+
+```
+
+# condition level prediction
+
+```{r}
+# Wrapper to fit the model
+fit_model <- function(data) {
+  # Prepare data columns
+  # Starting values (log-transformed for unconstrained optimization)
+  start_params <- c(
+    log(1),       # Beta ~ 1
+    qlogis(0.8)  # lambda ~ 0.8
+  )
+  
+  # Optimize
+  fit <- optim(
+    par = start_params,
+    fn = nll_func,
+    df = data,
+    method = "Nelder-Mead", # Robust for non-smooth surfaces
+    control = list(maxit = 5000)
+  )
+  
+  return(fit)
+}
+
+# Run Fit
+model_fit <- fit_model(df_model)
+
+# Get Best Parameters
+best_pars <- model_fit$par
+cat("Beta:", exp(best_pars[1]), "\n")
+cat("Lambda:", plogis(best_pars[2]), "\n")
+
+# Add Predictions to Dataframe for Plotting
+df_model$pred <- predict_model(best_pars, df_model)
+```
+
+## fit stat 
+
+```{r}
+plot_data <- df_model %>%
+  group_by(interdep, T,together_obs) %>%
+  summarise(
+    obs_mean = mean(y, na.rm = TRUE),
+    obs_se   = sd(y, na.rm = TRUE) / sqrt(n()),
+    pred_mean = mean(pred, na.rm=TRUE),
+    .groups  = "drop"
+  ) %>% 
+  mutate(
+    # Create readable factors
+    Repetition = factor(ifelse(T == 2, "T=2", "T=6"), 
+                        levels = c("T=2", "T=6")),
+    Social_Cond = factor(ifelse(interdep == 1, "Interdependent", "Independent"),
+                         levels = c("Independent", "Interdependent")),
+    
+    Visual_Cond = factor(ifelse(together_obs == 1, "Visual: Together", "Visual: Separate"),
+                         levels = c("Visual: Separate", "Visual: Together")))
+```
+
+```{r}
+library(Metrics) # For rmse function
+# 1. Aggregate Stats (Model Means vs. Human Means)
+# This matches what is visually shown in your Figure
+r_agg <- cor(plot_data$obs_mean, plot_data$pred_mean)
+rmse_agg <- rmse(plot_data$obs_mean, plot_data$pred_mean)
+r2_agg <- r_agg^2
+
+# 2. Individual Stats (Model vs. Every Single Participant)
+# This is more rigorous and often required by reviewers
+r_indiv <- cor(df_model$y, df_model$pred, use = "complete.obs")
+rmse_indiv <- rmse(df_model$y, df_model$pred)
+
+# --- OUTPUT FOR MANUSCRIPT ---
+cat("=== STATS FOR MANUSCRIPT ===\n")
+cat(sprintf("Aggregate Correlation (r): %.2f\n", r_agg))
+cat(sprintf("Aggregate RMSE: %.2f\n", rmse_agg))
+cat(sprintf("Individual Correlation (r): %.2f\n", r_indiv))
+```
+
+## plot  
+
+```{r}
+style_data <- plot_data %>%
+  mutate(
+    x_group = paste(Social_Cond, Repetition, sep = "_"),
+    x_group = factor(x_group, levels = c("Independent_T=2", "Independent_T=6", 
+                                         "Interdependent_T=2", "Interdependent_T=6"))
+  )
+
+# Custom Labels
+label_data <- style_data %>%
+  distinct(Visual_Cond) %>%
+  expand_grid(
+    tibble(
+      x = c(1.5, 3.5), 
+      label = c(paste0("<span style='color:", red, "'>Independent</span>"),
+                paste0("<span style='color:", blue, "'>Interdependent</span>"))
+    )
+  )
+
+# Plot
+p <- ggplot(style_data, aes(x = x_group, y = obs_mean, fill = Social_Cond, alpha = Repetition)) +
+  
+  # A. Observed Data
+  geom_bar(stat = "identity", color = "black", width = 0.8) +
+  geom_errorbar(aes(ymin = obs_mean - obs_se, ymax = obs_mean + obs_se),width = 0.1, alpha = 1) +
+  
+  # B. Model Predictions (Fixed)
+  # We specify 'data' and 'mapping' clearly to avoid the argument error
+  geom_point(
+    data = style_data,
+    mapping = aes(x = x_group, y = pred_mean), 
+    size = 4, shape = 18, color = "black", fill = "white",
+    inherit.aes = FALSE # Important: ignore the fill/alpha from the main plot
+  ) +
+  
+  # C. Layout & Styling
+  facet_wrap(~ Visual_Cond) +
+  scale_fill_manual(values = c("Independent" = red, "Interdependent" = blue)) +
+  scale_alpha_manual(values = c("T=2" = 0.5, "T=6" = 1.0)) +
+  scale_x_discrete(labels = c("T=2", "T=6", "T=2", "T=6")) +
+  coord_cartesian(ylim = c(0, 110), clip = "off") +
+  
+  # D. Custom Text Labels
+  geom_richtext(
+    data = label_data, 
+    aes(x = x, y = -25, label = label), 
+    inherit.aes = FALSE,
+    fill = NA, label.color = NA, size = 4.5, fontface = "bold"
+  ) +
+  
+  theme_bw(base_size = 14) +
+  labs(y = "Mean Agreement Rating (0–100)") +
+  theme(
+    legend.position = "none",
+    axis.title.x = element_blank(),
+    panel.grid.major.x = element_blank(),
+    plot.margin = margin(b = 40, t = 10, l = 10, r = 10),
+    strip.background = element_rect(fill = "gray95"),
+    strip.text = element_text(face = "bold")
+  )
+
+print(p)
+ggsave(
+  filename = "model.png", 
+  plot = p, 
+  width = 6,       # Fits nicely on a standard page width
+  height = 3,       # Tall enough for 4 rows of panels
+  dpi = 300,         # 300 is standard print quality (use 600 for even higher)
+  units = "in",
+  bg = "white"       # Ensures the background isn't transparent
+)
+```
+
+# model comparison
+
+## model specification
+
+```{r}
+# Create Folds by Participant (Group K-Fold) ---
+K <- 10
+u_ids <- unique(df_model$id)
+id_map <- data.frame(
+  id = u_ids,
+  fold = sample(rep(1:K, length.out = length(u_ids)))
+)
+
+# Merge fold info back to main data
+df_cv <- df_model %>% left_join(id_map, by = "id")
+```
+
+
+```{r}
+# Constants
+RH <- 8
+RM <- 5
+RL <- 1
+epsilon <- 0.1
+theta_grid <- seq(0, 1, length.out = 201)
+
+# Likelihood - Coordination (vectorized): returns N x G matrix
+get_pcoord_mat <- function(beta, p, interdep_vec) {
+  dU_i_vec <- interdep_vec * (p * RH + (1 - p) * RL - RM) +
+              (1 - interdep_vec) * (RH - RM)
+
+  dU_we_vec <- interdep_vec * (RH - RM) + (1 - interdep_vec) * 0
+
+  dU <- outer(dU_i_vec, 1 - theta_grid) + outer(dU_we_vec, theta_grid)
+  plogis(beta * dU)
+}
+
+get_ptog_mat <- function(lambda, together_obs_vec) {
+  # 1. Curve for "Seen Together" (Strictly INCREASING with Theta)
+  ptog_curve <- lambda * (theta_grid + (1 - theta_grid) * epsilon) + (1 - lambda) * 0.5
+  
+  # 2. Likelihood Logic:
+  # If Together (1): Use ptog_curve (Seeing them is evidence FOR commitment)
+  # If Separate (0): Use 1.0        (Seeing them separate is NEUTRAL - learn nothing)
+
+  outer(together_obs_vec, ptog_curve) + outer(1 - together_obs_vec, rep(1, length(theta_grid))) 
+}
+
+
+# Full / Social / Heuristic models
+get_model_stats <- function(par, df, model_type = "full") {
+
+  # Unpack parameters (full parameterization)
+  beta   <- exp(par[1])
+  p      <- plogis(par[2])
+  lambda <- plogis(par[3])
+  a      <- par[4]
+  b      <- par[5]
+  sigma  <- exp(par[6])
+
+  if (model_type == "full") {
+    mat_coord <- get_pcoord_mat(beta, p, df$interdep)
+    mat_tog   <- get_ptog_mat(lambda, df$together_obs)
+    log_w_unscaled <- (df$T * log(mat_coord)) + (df$T * log(mat_tog))
+
+  } else if (model_type == "social") {
+    mat_coord <- get_pcoord_mat(beta, p, df$interdep)
+    log_w_unscaled <- (df$T * log(mat_coord))
+
+  } else if (model_type == "heur") {
+    mat_tog <- get_ptog_mat(lambda, df$together_obs)
+    log_w_unscaled <- (df$T * log(mat_tog))
+
+  } else {
+    stop("Unknown model_type")
+  }
+
+  # --- Stable row-wise softmax ---
+  row_maxs <- apply(log_w_unscaled, 1, max)
+  log_w <- sweep(log_w_unscaled, 1, row_maxs, "-")
+  w <- exp(log_w)
+  w <- w / rowSums(w)
+
+  etheta <- as.vector(w %*% theta_grid)
+
+  pred_mean <- a + b * etheta
+  liks <- dnorm(df$y, mean = pred_mean, sd = sigma, log = TRUE)
+
+  list(log_liks = liks, predictions = pred_mean)
+}
+
+# Null model helper
+get_null_stats <- function(par, df) {
+  a <- par[1]
+  sigma <- exp(par[2])
+  liks <- dnorm(df$y, mean = a, sd = sigma, log = TRUE)
+  preds <- rep(a, nrow(df))
+  list(log_liks = liks, predictions = preds)
+}
+```
+
+## fit models
+
+```{r}
+# Start Values
+ # Map 6 pars -> beta(1)=rationality, p(2), lambda(3)=weight to visual cue, a(4), b(5), sigma(6)
+start_full   <- c(log(5), qlogis(.5), qlogis(.9), 50, 40, log(10))
+start_social <- c(log(5), qlogis(.5), 50, 40, log(10))   # beta, p, a, b, sigma
+start_heur   <- c(qlogis(.9), 50, 40, log(10))           # lambda, a, b, sigma
+start_null   <- c(50, log(10))                           # a, sigma
+
+# Log-likelihood (maximize via fnscale=-1)
+ll_full <- function(par, df) {
+  sum(get_model_stats(par, df, "full")$log_liks)
+}
+
+ll_social <- function(par, df) {
+  # Map 5 pars -> 6 pars: beta(1), p(2), lambda(dummy), a(4), b(5), sigma(6)
+  full_pars <- c(par[1], par[2], -99, par[3], par[4], par[5])
+  sum(get_model_stats(full_pars, df, "social")$log_liks)
+}
+
+ll_heur <- function(par, df) {
+  # Map 4 pars -> 6 pars: beta(dummy), p(dummy), lambda(3), a(4), b(5), sigma(6)
+  full_pars <- c(-99, -99, par[1], par[2], par[3], par[4])
+  sum(get_model_stats(full_pars, df, "heur")$log_liks)
+}
+
+ll_null <- function(par, df) {
+  sum(get_null_stats(par, df)$log_liks)
+}
+
+# --- Robust optim wrappers ---
+fit_full_robust <- function(df) {
+  optim(
+    par = start_full,
+    fn = ll_full,
+    df = df,
+    method = "L-BFGS-B",
+    control = list(fnscale = -1),
+    lower = c(log(0.1), qlogis(.01), qlogis(.01),   0,   0, log(1)),
+    upper = c(log(50),  qlogis(.99), qlogis(.99), 100, 100, log(35))
+  )
+}
+
+fit_social_robust <- function(df) {
+  optim(
+    par = start_social,
+    fn = ll_social,
+    df = df,
+    method = "L-BFGS-B",
+    control = list(fnscale = -1),
+    lower = c(log(0.1), qlogis(.01),  0,   0, log(1)),
+    upper = c(log(50),  qlogis(.99), 100, 100, log(35))
+  )
+}
+
+fit_heur_robust <- function(df) {
+  optim(
+    par = start_heur,
+    fn = ll_heur,
+    df = df,
+    method = "L-BFGS-B",
+    control = list(fnscale = -1),
+    lower = c(qlogis(.01),  0,   0, log(1)),
+    upper = c(qlogis(.99), 100, 100, log(35))
+  )
+}
+
+fit_null_robust <- function(df) {
+  optim(
+    par = start_null,
+    fn = ll_null,
+    df = df,
+    control = list(fnscale = -1)
+  )
+}
+
+```
+
+## cross-validation
+
+```{r}
+cv_elpd <- tibble(fold = 1:K, full = NA_real_, social = NA_real_, heur = NA_real_, null = NA_real_)
+
+df_cv <- df_cv %>%
+  mutate(
+    pred_full   = NA_real_,
+    pred_social = NA_real_,
+    pred_heur   = NA_real_,
+    pred_null   = NA_real_
+  )
+
+for (k in 1:K) {
+  train <- df_cv %>% filter(fold != k)
+  test  <- df_cv %>% filter(fold == k)
+
+  fit_f <- fit_full_robust(train)
+  fit_s <- fit_social_robust(train)
+  fit_h <- fit_heur_robust(train)
+  fit_n <- fit_null_robust(train)
+
+  # parameter maps for test scoring
+  p_s_map <- c(fit_s$par[1], fit_s$par[2], -99, fit_s$par[3], fit_s$par[4], fit_s$par[5])
+  p_h_map <- c(-99, -99, fit_h$par[1], fit_h$par[2], fit_h$par[3], fit_h$par[4])
+
+  res_f <- get_model_stats(fit_f$par, test, "full")
+  res_s <- get_model_stats(p_s_map,  test, "social")
+  res_h <- get_model_stats(p_h_map,  test, "heur")
+  res_n <- get_null_stats(fit_n$par, test)
+
+  df_cv$pred_full[df_cv$fold == k]   <- res_f$predictions
+  df_cv$pred_social[df_cv$fold == k] <- res_s$predictions
+  df_cv$pred_heur[df_cv$fold == k]   <- res_h$predictions
+  df_cv$pred_null[df_cv$fold == k]   <- res_n$predictions
+
+  cv_elpd$full[k]   <- sum(res_f$log_liks)
+  cv_elpd$social[k] <- sum(res_s$log_liks)
+  cv_elpd$heur[k]   <- sum(res_h$log_liks)
+  cv_elpd$null[k]   <- sum(res_n$log_liks)
+
+  message("Fold ", k, " complete.")
+}
+
+```
+
+## results 
+
+```{r}
+totals <- colSums(select(cv_elpd, -fold), na.rm = TRUE)
+best_score <- max(totals)
+delta <- best_score - totals
+
+comparison_tab <- tibble(
+  Model = names(totals),
+  Total_ELPD = as.numeric(totals),
+  Delta_ELPD = as.numeric(delta)
+)
+
+# Fold-wise differences vs Full
+diff_social <- cv_elpd$full - cv_elpd$social
+diff_heur   <- cv_elpd$full - cv_elpd$heur
+diff_null   <- cv_elpd$full - cv_elpd$null
+
+# Standard errors (Vehtari et al.)
+se_social <- sqrt(nrow(cv_elpd)) * sd(diff_social)
+se_heur   <- sqrt(nrow(cv_elpd)) * sd(diff_heur)
+se_null   <- sqrt(nrow(cv_elpd)) * sd(diff_null)
+
+# Add SE column
+comparison_tab <- comparison_tab %>%
+  mutate(
+    SE = c(NA, se_social, se_heur, se_null)
+  )
+
+knitr::kable(
+  comparison_tab,
+  digits = 2,
+  caption = "ELPD Comparison with Standard Errors"
+)
+
+```
+
+```{r}
+calc_rmse <- function(obs, pred) sqrt(mean((obs - pred)^2, na.rm = TRUE))
+calc_r    <- function(obs, pred) cor(obs, pred, use = "pairwise.complete.obs")
+
+metrics <- tibble(
+  Model = c("Full", "Social", "Heuristic", "Null"),
+  R = c(
+    calc_r(df_cv$y, df_cv$pred_full),
+    calc_r(df_cv$y, df_cv$pred_social),
+    calc_r(df_cv$y, df_cv$pred_heur),
+    calc_r(df_cv$y, df_cv$pred_null)
+  ),
+  RMSE = c(
+    calc_rmse(df_cv$y, df_cv$pred_full),
+    calc_rmse(df_cv$y, df_cv$pred_social),
+    calc_rmse(df_cv$y, df_cv$pred_heur),
+    calc_rmse(df_cv$y, df_cv$pred_null)
+  )
+)
+```
+
+## visualization
+
+```{r,fig.height=10,fig.width=10}
+## visualization
+# 1. Summarize Observed (Bars)
+obs_summary <- df_cv %>%
+  group_by(interdep, T,together_obs) %>%
+  summarise(
+    obs_mean = mean(y, na.rm = TRUE),
+    obs_se   = sd(y, na.rm = TRUE) / sqrt(n()),
+    .groups  = "drop"
+  )
+
+# 2. Summarize Predicted (Dots)
+pred_summary <- df_cv %>%
+  pivot_longer(cols = starts_with("pred_"), names_to = "Model", values_to = "Prediction") %>%
+  group_by(Model, T,interdep,together_obs) %>%
+  summarise(pred_mean = mean(Prediction, na.rm=TRUE), .groups="drop") %>%
+  mutate(Model = recode(Model, 
+         "pred_full"="Full Model", 
+         "pred_social"="Social", # CHANGED LABEL
+         "pred_heur"="Heuristic", 
+         "pred_null"="Null"))
+
+# 3. Join & Plot
+plot_data <- pred_summary %>%
+  left_join(obs_summary, by = c("T","interdep", "together_obs")) %>%
+  mutate(Condition = paste0(ifelse(together_obs==0,"seperate","togeher"), "\n",
+                            ifelse(interdep==1, "Interdep.", "Indep."), "\n",
+                            ifelse(T==2, "T=2", "T=6")
+                            ))
+
+ggplot(plot_data, aes(x = Condition, y = obs_mean)) +
+  geom_bar(stat = "identity", fill = "gray85", width = 0.7) +
+  geom_errorbar(aes(ymin = obs_mean - obs_se, ymax = obs_mean + obs_se), 
+                width = 0.2, color = "gray40") +
+  geom_point(aes(y = pred_mean), color = red, size = 4, shape = 18) +
+  facet_wrap(~Model) +
+  theme_classic() +
+  labs(title = "Model Fit: Condition Means", 
+       y = "Agreement", x = "")
+```
+
+

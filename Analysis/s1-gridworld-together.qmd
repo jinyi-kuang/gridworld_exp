@@ -1,0 +1,325 @@
+---
+title: "1-gridworld-together"
+format:
+    html:
+      toc-title: Table of contents
+      toc: true
+      toc-depth: 2
+      code-fold: true # allow code folding
+      number-sections: true
+      highlight-style: github
+      toc-location: body
+      cap-location: top
+      page-layout: full
+      embed-resources: true
+      self-contained-math: true
+      toc-expand: true
+      theme: cosmo
+execute:
+  echo: false        # show R code
+  warning: false    # hide warnings
+  message: false    # hide messages
+  eval: true        # run the code
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F)
+library(tidyverse)
+library(lme4)
+library(table1)
+library(ggeffects)
+library(jtools)
+library(rempsyc)
+library(emmeans)
+library(ggpubr)
+library(effectsize)
+library(brms)
+library(jsonlite)
+library(purrr)
+library(stringr)
+library(broom)
+red <- "#D52A2A" 
+blue <- "#1F77B4" 
+
+set.seed(999)
+emm_options(pbkrtest.limit = 5000)
+```
+
+```{r}
+path <- "data/s1"  
+files <- list.files(path, pattern = "\\.csv$", full.names = TRUE)
+```
+
+```{r}
+# Function to parse one CSV
+read_one_participant <- function(file) {
+  
+  # extract file name (without path)
+  file_name <- basename(file)
+  
+  # read first cell
+  raw <- readLines(file, n = 1)
+  
+  # fix JSON-like format: replace tabs with commas and add quotes around keys
+  json_text <- raw %>%
+    str_replace_all("\t", ",") %>%
+    str_replace_all("(\\w+):", '"\\1":')
+  
+  # parse JSON
+  dat <- fromJSON(json_text, flatten = TRUE)
+  
+  # extract session metadata
+  meta <- dat$sessionMeta %>% as.data.frame()
+  
+  # extract trials
+  trials <- dat$trials %>% as.data.frame()
+  
+  # extract DVs with non-null response
+  dv <- trials %>%
+    filter(!is.na(dv_name) & dv_name != "null") %>%
+    select(dv_name, response) %>%
+    pivot_wider(names_from = dv_name, values_from = response)
+  
+  # extract demographics from survey-html-form trial
+  demo <- trials %>%
+    filter(trial_type == "survey-html-form") %>%
+    pull(response) %>%
+    map(~ as.list(.)) %>%
+    bind_rows()
+  
+  # combine all
+  cbind(file_name = file_name,meta, dv, demo)
+}
+
+```
+
+```{r}
+# Read all CSVs and combine
+df <- list.files(path, pattern = "\\.csv$", full.names = TRUE) %>%
+  map_dfr(read_one_participant) %>% 
+  mutate(Age=as.numeric(participantYears),
+         Gender=participantGender,
+         Race=participantRace,
+         Ethnicity=participantEthnicity,
+         agreement=as.numeric(agreement),
+         commitment =as.numeric(commitment),
+         anger=as.numeric(anger),
+         guilt=as.numeric(guilt)) 
+
+# one person is missing from osf 
+ids <-df$prolificID
+all<-read.csv("data/s1-prolific_id.csv") %>% filter(Status == "APPROVED")
+all_ids<-all$id
+setdiff(all_ids, ids)
+```
+
+
+## demographics 
+
+```{r}
+table1(~ Gender + Age+  Race + Ethnicity,data=df)
+```
+
+## Descriptive stat
+
+```{r}
+#table1(~ agreement + commitment + anger + guilt | repetition_condition,data=df)
+#table1(~ agreement + commitment + anger + guilt | payoff_condition,data=df)
+table1(~ agreement + commitment + anger + guilt | repetition_condition+payoff_condition,data=df)
+```
+
+```{r}
+df_long <- df %>%
+  pivot_longer(cols = c(agreement, commitment, anger, guilt),
+               names_to = "DV",
+               values_to = "value") %>%
+  mutate(
+    repetition_condition = recode(repetition_condition, "low" = "T=2", "high" = "T=6"),
+    payoff_condition = recode(payoff_condition, "independent" = "Independent", "interdependent" = "Interdependent")
+  ) 
+
+# 2. Prepare Data
+df_plot <- df_long %>%
+  mutate(
+    x_group = paste(payoff_condition, repetition_condition, sep = "_"),
+    x_group = factor(x_group, levels = c("Independent_T=2", "Independent_T=6", 
+                                          "Interdependent_T=2", "Interdependent_T=6"))
+  )
+
+# 3. Custom Star Function
+get_stars <- function(p) {
+  case_when(
+    p < 0.001 ~ "***",
+    p < 0.01  ~ "**",
+    p < 0.05  ~ "*",
+    TRUE      ~ "ns"
+  )
+}
+
+# 4. Calculate Manual Stats
+# A. Simple Effects
+stats_simple <- compare_means(value ~ repetition_condition, data = df_plot, group.by = c("DV", "payoff_condition"), method = "t.test") %>%
+  ungroup() %>%
+  mutate(
+    y.position = 85,
+    xmin = ifelse(payoff_condition == "Independent", 1, 3),
+    xmax = ifelse(payoff_condition == "Independent", 2, 4),
+    p.signif = get_stars(p)
+  )
+
+# B. Main Effect
+stats_main <- compare_means(value ~ payoff_condition, data = df_plot, group.by = "DV", method = "t.test") %>%
+  ungroup() %>%
+  mutate(
+    y.position = 105, 
+    xmin = 1.5, 
+    xmax = 3.5,
+    p.signif = get_stars(p)
+  )
+
+# 5. Define Labels (Bottom Row Only)
+bottom_vars <- c("commitment", "guilt") 
+label_data <- tibble(
+  x = rep(c(1.5, 3.5), length(bottom_vars)), 
+  y = rep(-30, 2 * length(bottom_vars)), 
+  label = rep(c(paste0("<span style='color:", red, "'>Independent</span>"),
+                paste0("<span style='color:", blue, "'>Interdependent</span>")), length(bottom_vars)),
+  DV = rep(bottom_vars, each = 2) 
+)
+
+# 6. Plot
+# --- FIX IS HERE: Added 'alpha = repetition_condition' ---
+p <- ggplot(df_plot, aes(x = x_group, y = value, fill = payoff_condition, alpha = repetition_condition)) +
+  
+  # Bars (will inherit alpha)
+  stat_summary(fun = mean, geom = "bar", color = "black", width = 0.7) +
+  
+  # Error Bars (override alpha to 1 so they are always solid black)
+  stat_summary(fun.data = mean_se, geom = "errorbar", width = 0.1, alpha = 1) +
+  
+  # Stats
+  stat_pvalue_manual(stats_simple, label = "p.signif", xmin = "xmin", xmax = "xmax", tip.length = 0.02) +
+  stat_pvalue_manual(stats_main, label = "p.signif", xmin = "xmin", xmax = "xmax", tip.length = 0.02, bracket.size = 0.5) +
+  
+  facet_wrap(~ DV) +
+  
+  # Scales
+  scale_fill_manual(values = c("Independent" = red, "Interdependent" = blue)) +
+  
+  # --- ALPHA SCALE NOW WORKS ---
+  scale_alpha_manual(values = c("T=2" = 0.5, "T=6" = 1.0)) +
+  
+  scale_x_discrete(labels = c("T=2", "T=6", "T=2", "T=6")) +
+  coord_cartesian(ylim = c(0, 110), clip = "off") + 
+  
+  # Custom Labels
+  ggtext::geom_richtext(
+    data = label_data, 
+    aes(x = x, y = y, label = label),
+    inherit.aes = FALSE,
+    fill = NA, label.color = NA, size = 4.5, fontface = "bold"
+  ) +
+  
+  theme_bw(base_size = 14) +
+  theme(
+    legend.position = "none",
+    axis.title.x = element_blank(),
+    panel.grid.major.x = element_blank(),
+    plot.margin = margin(b = 40, t = 10, l = 10, r = 10) 
+  )
+
+print(p)
+
+```
+
+## analysis 
+
+For each dependent variable, we will conduct a two-way analysis of variance (ANOVA) for each dependent variable:
+- agreement ~ repetition_condition * interdependency
+- commitment ~ repetition_condition * interdependency
+- anger ~ repetition_condition * interdependency
+- guilt ~ repetition_condition * interdependency
+
+If the interaction is significant, simple effects will be tested using planned contrasts. If the interaction is not significant, main effects will be reported.
+
+We will report means, standard deviations, F-statistics, p-values, partial eta squared, and 95% confidence intervals for main effects and the interaction.
+
+```{r}
+df <- df %>%
+  mutate(
+    repetition_condition = factor(repetition_condition,
+                                  levels = c("low", "high")),
+    interdependency = factor(payoff_condition,
+                             levels = c("independent", "interdependent"))
+  ) %>% 
+  mutate(Experiment="Experiment 1")
+
+# pre-registeretd interaction
+a_agreement <- aov(agreement ~ repetition_condition * interdependency, data = df)
+a_commitment <- aov(commitment ~ repetition_condition * interdependency, data = df)
+a_anger <- aov(anger ~ repetition_condition * interdependency, data = df)
+a_guilt <- aov(guilt ~ repetition_condition * interdependency, data = df)
+
+# interaction not significant 
+a_agreement <- aov(agreement ~ repetition_condition + interdependency, data = df)
+a_commitment <- aov(commitment ~ repetition_condition + interdependency, data = df)
+a_anger <- aov(anger ~ repetition_condition + interdependency, data = df)
+a_guilt <- aov(guilt ~ repetition_condition + interdependency, data = df)
+
+# Tidy ANOVAs and add DV labels
+tb <- bind_rows(
+  tidy(a_agreement) %>% filter(term != "Residuals") %>% mutate(DV = "Agreement"),
+  tidy(a_commitment) %>% filter(term != "Residuals") %>% mutate(DV = "Commitment"),
+  tidy(a_anger) %>% filter(term != "Residuals") %>% mutate(DV = "Anger"),
+  tidy(a_guilt) %>% filter(term != "Residuals") %>% mutate(DV = "Guilt")
+)
+
+# Add partial eta squared
+es <- bind_rows(
+  eta_squared(a_agreement, partial = TRUE,alternative = "greater"),
+  eta_squared(a_commitment, partial = TRUE,alternative = "greater"),
+  eta_squared(a_anger, partial = TRUE,alternative = "greater"),
+  eta_squared(a_guilt, partial = TRUE,alternative = "greater")
+)
+
+# Combine effects into one data frame
+tb %>%
+  rename(
+    Effect = term,
+    F = statistic,
+    p = p.value
+  ) %>%
+  mutate(eta2_partial = es$Eta2_partial) %>%
+  select(DV, Effect, df, F, p, eta2_partial) %>% 
+  nice_table(.,
+             stars = TRUE,      
+             #title = "ANOVA Results with Partial Eta Squared",
+             #highlight = TRUE    # highlight significant rows
+             )
+
+
+# # Get marginal means
+# library(emmeans)
+# emmeans(a_agreement, ~ repetition_condition * interdependency)
+# emmeans(a_commitment, ~ repetition_condition * interdependency)
+# emmeans(a_anger, ~ repetition_condition * interdependency)
+# emmeans(a_guilt, ~ repetition_condition * interdependency)
+
+
+# # For contrasts:
+# contrast(
+#   emmeans(a_agreement, ~ repetition_condition * interdependency),
+#   interaction = "pairwise"
+# )
+# 
+# emmeans(a_anger, pairwise ~ repetition_condition | interdependency)
+# emmeans(a_anger, pairwise ~ interdependency | repetition_condition)
+```
+
+## save data
+```{r}
+df %>% rename(id=file_name) %>% 
+  select(-condition,-prolificID) %>% 
+  write.csv(.,"data/exp1.csv")
+```
+
