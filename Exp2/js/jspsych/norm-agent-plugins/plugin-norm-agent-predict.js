@@ -32,7 +32,7 @@ var jsPsychNormAgentPredict = (function (jspsych) {
    *
    * A jsPsych plugin for a prediction trial in the Gridworld environment
    *
-   * @author [Jinyi Kuang]
+   * 
    */
   class NormAgentPredictPlugin {
     constructor(jsPsych) {

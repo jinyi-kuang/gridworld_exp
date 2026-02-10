@@ -69,6 +69,7 @@ function setupGame() {
     type: jsPsychPreload,
     images: [
       'assets/image/gridworld.png',
+      'assets/image/gridworld-empty.jpg',
       'assets/image/agent.png',
       'assets/image/harvest.png',
       'assets/image/basket_yellow.png',

@@ -50,7 +50,7 @@ var jsPsychNormAgentObserve = (function(jspsych) {
    *
    * A jsPsych plugin for an observation trial in the Gridworld environment
    *
-   * @author [Jinyi Kuang]
+   * 
    */
   class NormAgentObservePlugin {
     constructor(jsPsych) {

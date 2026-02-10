@@ -70,6 +70,7 @@ function setupGame() {
     images: [
       'assets/image/gridworld.png',
       'assets/image/agent.png',
+      'assets/image/gridworld-empty.jpg',
       'assets/image/harvest.png',
       'assets/image/basket_yellow.png',
       'assets/image/basket_purple.png',
@@ -185,7 +186,7 @@ function setupGame() {
      and then answer some questions about what you observed.</p>`,
 
     `<p>The farm is a <em>10</em> squares wide and <em>10</em> squares tall grid, just like this:</p>
-   <img height="500" src="assets/image/gridworld.png">
+   <img height="500" src="assets/image/gridworld-empty.jpg">
    <p>There are <em>berry trees</em> located on the farm.</p>`,
 
     `<p>Each tree produces two types of berries: yellow berries and purple berries.</p>
