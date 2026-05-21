@@ -3,25 +3,28 @@
 This repository contains the code, experiment materials, and analysis for the CogSci proceedings paper:
 
 > **Inferring Joint Commitment from Observed Coordination**  
-> Jinyi Kuang, Erik Brockbank, Cristina Bicchieri, & Robert D. Hawkins
+> Kuang, J., Brockbank, E., Bicchieri, C., & Hawkins, R. (2026)
+> Proceedings of the 48th Annual Meeting of the Cognitive Science Society 
+> https://github.com/jinyi-kuang/gridworld_exp
 
-The project investigates how observers infer **joint commitment** from repeated coordination behavior using a Gridworld task and a Bayesian Theory of Mind framework. Participants observed pairs of agents coordinating in a spatial environment and inferred the extent to which the agents were acting as a committed “we.” :contentReference[oaicite:0]{index=0}
-
----
-
-## Citation
-
-Kuang, J., Brockbank, E., Bicchieri, C., & Hawkins, R. (2026). Inferring joint commitment from observed coordination. In *Proceedings of the 48th Annual Meeting of the Cognitive Science Society*. 
 
 ### Abstract
 
-Successful social life requires agents to accurately perceive social bonds and infer whether interacting partners are committed to a shared goal. This project introduces a computational model of commitment inference based on Bayesian Theory of Mind and evaluates it in a series of Gridworld coordination experiments. Across two experiments (`N = 785`), observers inferred stronger commitment when coordination involved payoff interdependence and repeated successful cooperation. :contentReference[oaicite:2]{index=2}
+Successful social life requires agents to accurately perceive social bonds and infer whether interacting partners are committed to a shared goal. Yet observable behavior is often ambiguous regarding whether a joint commitment is present. How do observers infer joint commitment from observed behavior alone? We propose a computational model of commitment inference based on Bayesian Theory of Mind. The model predicts that observers update beliefs about latent commitments based on two cues: whether coordination requires mutual participation to avoid a suboptimal outcome (interdependence) and the history of successful coordination (repetition). We tested these predictions in two experiments (N=785) in which participants observed two farmers harvesting berries in a grid world farm and evaluated the level of commitment between them. Results show that both interdependence and repetition strengthen inferences of commitment. These findings demonstrate how observers track the emergence of collective agency from observed coordination.
 
----
+Keywords: joint action; joint commitment; Bayesian theory of mind; coordination
 
-# Repository Structure
+### Task Visualization
 
-```text
+
+
+https://github.com/user-attachments/assets/6c8073bb-118d-41d7-ae77-ecf5d1a41673
+
+
+
+### Repository Structure
+
+
 gridworld_exp/
 ├── Analysis/              # Statistical analyses and model fitting
 ├── Exp1/                  # Experiment 1 (joint-location coordination)
