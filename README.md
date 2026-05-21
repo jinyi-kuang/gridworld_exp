@@ -4,7 +4,8 @@ This repository contains the code, experiment materials, and analysis for the Co
 
 > **Inferring Joint Commitment from Observed Coordination**  
 > Kuang, J., Brockbank, E., Bicchieri, C., & Hawkins, R. (2026)
-> Proceedings of the 48th Annual Meeting of the Cognitive Science Society 
+> Proceedings of the 48th Annual Meeting of the Cognitive Science Society
+> 
 > https://github.com/jinyi-kuang/gridworld_exp
 
 
@@ -18,7 +19,7 @@ Keywords: joint action; joint commitment; Bayesian theory of mind; coordination
 
 <p align="center">
   <img
-    src="https://github.com/user-attachments/assets/98c5d6c7-7236-4fa3-b929-c3d7b66355c3"
+    src="https://github.com/user-attachments/assets/ca8df8ed-78d3-449c-b9ed-fb7e18827fba"
     alt="Demo of the Gridworld Experiment."
     width="720"
   />
@@ -27,6 +28,9 @@ Keywords: joint action; joint commitment; Bayesian theory of mind; coordination
 <p align="center">
   <em>Participants observe two farmers coordinate to harvest berries in a shared grid farm in Experiment 1.</em>
 </p>
+
+
+
 
 
 
