@@ -14,17 +14,25 @@ Successful social life requires agents to accurately perceive social bonds and i
 
 Keywords: joint action; joint commitment; Bayesian theory of mind; coordination
 
-### Task Visualization
+### Demo
 
+<p align="center">
+  <img
+    src="https://github.com/user-attachments/assets/6c8073bb-118d-41d7-ae77-ecf5d1a41673"
+    alt="Demo of the Gridworld experiment task"
+    width="720"
+  />
+</p>
 
-
-https://github.com/user-attachments/assets/6c8073bb-118d-41d7-ae77-ecf5d1a41673
+<p align="center">
+  <em>Participants observe two farmers coordinating across repeated Gridworld harvests.</em>
+</p>
 
 
 
 ### Repository Structure
 
-
+```text
 gridworld_exp/
 ├── Analysis/              # Statistical analyses and model fitting
 ├── Exp1/                  # Experiment 1 (joint-location coordination)
