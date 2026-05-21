@@ -18,20 +18,15 @@ Keywords: joint action; joint commitment; Bayesian theory of mind; coordination
 
 <p align="center">
   <img
-    src="https://github.com/user-attachments/assets/1c2daf88-8c2b-4010-b0da-41cfee46b454"
-    alt="Demo of the Gridworld experiment task"
+    src="https://github.com/user-attachments/assets/98c5d6c7-7236-4fa3-b929-c3d7b66355c3"
+    alt="Demo of the Gridworld Experiment."
     width="720"
   />
 </p>
 
 <p align="center">
-  <em>Participants observe two farmers coordinating across repeated Gridworld harvests.</em>
+  <em>Participants observe two farmers coordinate to harvest berries in a shared grid farm in Experiment 1.</em>
 </p>
-
-
-
-
-
 
 
 
